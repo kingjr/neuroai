@@ -14,10 +14,10 @@
 
    <div class="hero-section-root">
      <h1 class="hero-tagline-main">
-       Simple. Fast. Robust. Scalable.
+       Simple. Fast. Scalable.
      </h1>
      <p class="hero-subtitle">
-       The Python suite for brain data across all modalities — from raw recordings to state-of-the-art decoding.
+       The Python suite for Neuro-AI.
      </p>
      <div style="text-align: center; margin-top: 1.5rem; margin-bottom: 0.5rem;">
        <div style="display: inline-flex; align-items: center; gap: 0.6rem; position: relative;">
@@ -53,30 +53,33 @@
        neuralset loads & transforms, and neuraltrain trains models.
      </p>
      <div class="packages-cards">
+    
+       <!-- NeuralSet (highlighted as recommended starting point) -->
+       <div class="package-card-wrapper">
+         <a href="neuralset/index.html" class="package-card package-card--highlight">
+           <div class="package-card-icon"><i class="fas fa-database"></i></div>
+           <div class="package-card-name">NeuralSet</div>
+           <div class="package-card-tagline">Turn neural and stim data into AI-ready tensors.</div>
+         </a>
+       </div>
+
+
        <!-- Neuralfetch -->
        <div class="package-card-wrapper">
         <a href="neuralfetch/index.html" class="package-card">
           <div class="package-card-icon"><i class="fas fa-download"></i></div>
-          <div class="package-card-name">neuralfetch</div>
-           <div class="package-card-tagline">Access the world's curated brain datasets.</div>
+          <div class="package-card-name">NeuralFetch</div>
+           <div class="package-card-tagline">Fetch curated Neuro-AI datasets.</div>
          </a>
        </div>
 
-       <!-- Neuralset (highlighted as recommended starting point) -->
-       <div class="package-card-wrapper">
-         <a href="neuralset/index.html" class="package-card package-card--highlight">
-           <div class="package-card-icon"><i class="fas fa-database"></i></div>
-           <div class="package-card-name">neuralset</div>
-           <div class="package-card-tagline">Turn raw brain data into AI-ready features.</div>
-         </a>
-       </div>
 
        <!-- Neuraltrain -->
        <div class="package-card-wrapper">
          <a href="neuraltrain/index.html" class="package-card">
            <div class="package-card-icon"><i class="fas fa-dumbbell"></i></div>
-           <div class="package-card-name">neuraltrain</div>
-           <div class="package-card-tagline">Deep learning for the brain, supercharged.</div>
+           <div class="package-card-name">NeuralTrain</div>
+           <div class="package-card-tagline">Deep learning for Neuro-AI.</div>
          </a>
        </div>
 

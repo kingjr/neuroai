@@ -1,25 +1,15 @@
-neuralset
+NeuralSet
 =========
 
-.. raw:: html
+**NeuralSet** turns raw neural recordings and stimuli into PyTorch-ready
+datasets. 
 
-   <p class="landing-badge landing-badge--hero"><i class="fas fa-database"></i><span>neuralset</span></p>
-
-**neuralset** turns raw neural recordings and stimuli into PyTorch-ready
-datasets. Define a study, load events into a flat DataFrame, apply
-transforms, extract features with configurable extractors, and segment
-everything into batches — all lazy, typed with pydantic, and cacheable.
+Quick install
+-------------
 
 .. code-block:: bash
 
    pip install neuralset
-
-Add the ``tutorials`` extra for feature-extraction dependencies, as well as
-:doc:`neuralfetch </neuralfetch/index>` to experiment with curated public datasets:
-
-.. code-block:: bash
-
-   pip install 'neuralset[tutorials]' neuralfetch
 
 Heavier dependencies (e.g. ``transformers`` for text/image/etc feature
 extraction) live in ``[all]`` — see :doc:`Installation <install>` for
@@ -27,10 +17,20 @@ the full breakdown.
 
 ----
 
-Quickstart
+Quick start
 ----------
 
-From study to PyTorch batch — pick an example to see the code.
+First make sure to have the adequate dependencies installed to run this quick tutorial.
+
+
+.. code-block:: bash
+
+   pip install 'neuralset[tutorials]' neuralfetch
+
+
+Then, pick an example to see the code. The first time you run it, it will be slow 
+(data downloading, cache preparation, etc.).
+But then, it will be lightning fast, even as you change parameters (e.g. segment duration).
 
 .. raw:: html
 
@@ -40,11 +40,11 @@ From study to PyTorch batch — pick an example to see the code.
        <label class="selector-item">
          <span class="selector-label">📋 Example</span>
          <select id="sel-preset">
-           <option value="bel-language" selected>🗣️ Language + MEG — Bel2026PetitListenSample</option>
-           <option value="li2022-language">🗣️ Language + fMRI — Li2022PetitSample</option>
-           <option value="grootswagers-image">🖼️ Image + EEG — Grootswagers2022HumanSample</option>
-           <option value="allen-image">🖼️ Image + fMRI — Allen2022MassiveSample</option>
-           <option value="fake-classif">🏷️ Classification + fMRI — Fake2025Fmri (no download)</option>
+           <option value="bel-language" selected>🗣️ Language + MEG</option>
+           <option value="li2022-language">🗣️ Language + fMRI</option>
+           <option value="grootswagers-image">🖼️ Image + EEG</option>
+           <option value="allen-image">🖼️ Image + fMRI</option>
+           <option value="fake-classif">🏷️ Classification + fMRI</option>
          </select>
        </label>
      </div>

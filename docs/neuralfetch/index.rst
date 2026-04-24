@@ -1,25 +1,25 @@
-neuralfetch
+NeuralFetch
 ===========
 
-.. raw:: html
-
-   <p class="landing-badge landing-badge--hero"><i class="fas fa-download"></i><span>neuralfetch</span></p>
-
-**One interface to fetch neuroimaging datasets from OpenNeuro, DANDI, OSF,
+**Fetch curated datasets from OpenNeuro, DANDI, OSF,
 HuggingFace, Zenodo, and more — into a unified events DataFrame ready for
-neuralset.**
+NeuralSet.**
+
+Quick install
+-------------
+
 
 .. code-block:: bash
 
    pip install neuralfetch
 
 Installing neuralfetch automatically registers all curated studies in
-neuralset's catalog — no extra imports needed.
+NeuralSet's catalog — no extra imports needed.
 
 ----
 
-Quickstart
-----------
+Quick start
+-----------
 
 Pick a sample dataset and see the full fetch-to-events workflow.
 
@@ -30,10 +30,10 @@ Pick a sample dataset and see the full fetch-to-events workflow.
        <label class="selector-item">
          <span class="selector-label">📋 Dataset</span>
          <select id="sel-nh-preset">
-           <option value="listen-meg" selected>🗣️ Language + MEG — Bel2026PetitListenSample</option>
-           <option value="images-eeg">🖼️ Images + EEG — Grootswagers2022HumanSample</option>
-           <option value="language-fmri">📖 Language + fMRI — Li2022PetitSample</option>
-           <option value="images-fmri">🖼️ Images + fMRI — Allen2022MassiveSample</option>
+           <option value="listen-meg" selected>🗣️ Language + MEG</option>
+           <option value="images-eeg">🖼️ Images + EEG</option>
+           <option value="language-fmri">📖 Language + fMRI</option>
+           <option value="images-fmri">🖼️ Images + fMRI</option>
          </select>
        </label>
      </div>
@@ -485,7 +485,7 @@ Sample datasets are available for immediate use — no large download required:
 Citation
 --------
 
-See the :doc:`neuralset page </neuralset/index>` for the preferred
+See the :doc:`NeuralSet page </neuralset/index>` for the preferred
 citation (BibTeX at the bottom).
 
 .. toctree::
