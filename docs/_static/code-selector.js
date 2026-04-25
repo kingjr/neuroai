@@ -188,13 +188,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   var task = {
     language: {
-      installComment: '# Requires: `pip install spacy` (or `pip install "neuralset[all]"`) and `python -m spacy download en_core_web_md`',
+      pipExtras: "all",
+      postInstall: "python -m spacy download en_core_web_md  # for SpacyEmbedding",
       stim: 'stim = ns.extractors.SpacyEmbedding(aggregation="trigger", infra=infra)',
       eventType: "Word",
       isClassification: false,
     },
     image: {
-      installComment: '# Requires: `pip install transformers` (or `pip install "neuralset[all]"`)',
+      pipExtras: "all",
       stim:
         'stim = ns.extractors.HuggingFaceImage(\n' +
         '    model_name="facebook/dinov2-small",\n' +
@@ -206,7 +207,7 @@ document.addEventListener("DOMContentLoaded", function () {
       isClassification: false,
     },
     video: {
-      installComment: '# Requires: `pip install transformers` (or `pip install "neuralset[all]"`)',
+      pipExtras: "all",
       stim:
         'stim = ns.extractors.HuggingFaceVideo(\n' +
         '    frequency=4,\n' +
@@ -315,11 +316,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function buildDataBlock(tsk, dev, studyName, installDeps) {
     var lines = [];
-    if (installDeps) {
-      lines.push("# First install study dependencies:");
-      lines.push("# pip install neuralfetch " + installDeps);
-      lines.push("");
+    var pkg = tsk.pipExtras ? "'neuralset[" + tsk.pipExtras + "]'" : "neuralset";
+    var pipParts = [pkg, "neuralfetch"];
+    if (installDeps) pipParts.push(installDeps);
+    lines.push("# Setup (run once):");
+    lines.push("#   pip install " + pipParts.join(" "));
+    if (tsk.postInstall) {
+      lines.push("#   " + tsk.postInstall);
     }
+    lines.push("");
     lines.push(
       "import neuralset as ns",
       "from torch.utils.data import DataLoader",
@@ -352,10 +357,9 @@ document.addEventListener("DOMContentLoaded", function () {
       "",
       "# 2. Define extractors",
       dev.neuro,
-      ""
+      "",
+      tsk.stim
     );
-    if (tsk.installComment) lines.push(tsk.installComment);
-    lines.push(tsk.stim);
     lines.push("");
     lines.push("# 3. Segment into a Dataset");
     lines.push("segmenter = ns.dataloader.Segmenter(");

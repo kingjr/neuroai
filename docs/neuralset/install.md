@@ -7,7 +7,7 @@
 pip install neuralset
 ```
 
-**NeuralSet** is the data pipeline and only ships with testing/synthetic studies. To load the full catalog of public datasets, also install :doc:`NeuralFetch </neuralfetch/index>`:
+**NeuralSet** is the data pipeline and only ships with testing/synthetic studies. To load the full catalog of public datasets, also install {doc}`NeuralFetch </neuralfetch/index>`:
 
 ```bash
 pip install neuralfetch

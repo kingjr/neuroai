@@ -20,17 +20,10 @@ the full breakdown.
 Quick start
 ----------
 
-First make sure to have the adequate dependencies installed to run this quick tutorial.
-
-
-.. code-block:: bash
-
-   pip install 'neuralset[tutorials]' neuralfetch
-
-
-Then, pick an example to see the code. The first time you run it, it will be slow 
-(data downloading, cache preparation, etc.).
-But then, it will be lightning fast, even as you change parameters (e.g. segment duration).
+Pick an example to see the code (the install command is inlined as a comment
+at the top of the snippet). The first time you run it, it will be slow
+(data downloading, cache preparation, etc.) — but then lightning fast, even
+as you change parameters (e.g. segment duration).
 
 .. raw:: html
 
