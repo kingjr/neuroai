@@ -244,5 +244,6 @@ Citation
    :caption: Reference
 
    API <reference/reference>
+   Philosophy <philosophy>
    Glossary <glossary>
    Contributing <extending/contributing.md>

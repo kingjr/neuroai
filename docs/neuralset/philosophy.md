@@ -1,7 +1,3 @@
----
-orphan: true
----
-
 # Philosophy
 
 Design principles behind NeuralSet.
