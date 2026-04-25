@@ -15,9 +15,6 @@
    </div>
 
    <div class="hero-section-root">
-     <h1 class="hero-tagline-main">
-       Simple. Fast. Scalable.
-     </h1>
      <p class="hero-subtitle">
        The Python suite for Neuro-AI.
      </p>

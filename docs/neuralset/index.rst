@@ -12,8 +12,13 @@ Quick install
    pip install neuralset
 
 Heavier dependencies (e.g. ``transformers`` for text/image/etc feature
-extraction) live in ``[all]`` — see :doc:`Installation <install>` for
-the full breakdown.
+extraction) can be pre-installed with: 
+
+.. code-block:: bash
+
+  pip install neuralset[all]
+
+see :doc:`Installation <install>` for the full breakdown.
 
 ----
 
@@ -63,7 +68,7 @@ lightning fast, even as you change parameters (e.g. segment duration).
 Tutorials
 ---------
 
-Each tutorial walks through one building block of the pipeline.
+Each tutorial walks through one building block of the NeuralSet pipeline.
 
 .. raw:: html
 
