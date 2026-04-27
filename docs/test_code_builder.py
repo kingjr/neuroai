@@ -8,12 +8,18 @@
 
 Four layers:
   L0  YAML schema + cls resolution + JS-in-sync.            Always runs.
-  L1  AST-parse every emitted Python script.                Always runs.
-  L2  Per-axis pydantic instantiation (~10 cases).          Always runs.
+  L1  AST-parse the rendered script per axis option.        Always runs.
+  L2  Per-axis pydantic instantiation.                      Always runs.
   L3  End-to-end exec of the rendered script per option.    @pytest.mark.slow
+
+L1/L2/L3 all parametrize on the same per-axis-pinned set: one combo per
+axis option, with the other axes at their defaults. That set already
+exercises every conditional branch in the renderer; a full Cartesian
+sweep would multiply redundant leaves on top.
 
 L1/L2/L3 share a Python re-implementation of the renderer that mirrors
 ``docs/_static/code-builder.js`` line-for-line. Keep them in sync.
+(See PR plan to retire this mirror in favour of a precomputed bundle.)
 """
 
 from __future__ import annotations
@@ -56,22 +62,6 @@ def _resolve_study(sel: dict) -> dict:
 def _resolve_model(sel: dict) -> dict:
     """Mirror of `model()` in code-builder.js."""
     return AXES["model"]["options"][sel["model"]]
-
-
-def _all_combos() -> list[dict]:
-    out: list[dict] = []
-
-    def go(i: int, sel: dict) -> None:
-        if i == len(AXIS_ORDER):
-            out.append(dict(sel))
-            return
-        axis = AXIS_ORDER[i]
-        for key in AXES[axis]["options"]:
-            sel[axis] = key
-            go(i + 1, sel)
-
-    go(0, {})
-    return out
 
 
 def _axis_pinned() -> list[dict]:
@@ -610,10 +600,13 @@ def test_l0_generated_js_is_in_sync() -> None:
     )
 
 
-# ── L1: AST sweep over all combos ───────────────────────────────────────────
+# ── L1: AST sweep over per-axis-pinned combos ──────────────────────────────
+# (Switched from the full Cartesian sweep — the per-axis-pinned set already
+# covers every conditional branch in the renderer; the Cartesian sweep was
+# adding ~850 redundant tests for ~zero coverage gain.)
 
 
-@pytest.mark.parametrize("sel", _all_combos(), ids=_id)
+@pytest.mark.parametrize("sel", _axis_pinned(), ids=_id)
 def test_l1_rendered_script_parses(sel: dict) -> None:
     script = _render(sel)
     try:
