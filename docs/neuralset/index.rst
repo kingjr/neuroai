@@ -241,6 +241,7 @@ Citation
    Installation <install>
    Tutorials <auto_examples/walkthrough/index>
    Caching & Cluster Execution <caching_and_cluster>
+   Code Builder <code_builder>
    Encoding & Decoding <encoding_decoding>
 
 .. toctree::

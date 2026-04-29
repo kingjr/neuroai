@@ -115,7 +115,10 @@ html_css_files = [
 
 html_js_files = [
     "pipeline-accordion.js",
+    "code-highlight.js",  # shared by code-selector.js + code-builder.js
     "code-selector.js",
+    "code-builder-data.js",  # auto-generated from _data/code-builder-data.yaml
+    "code-builder.js",
     "sidebar-nav.js",
 ]
 
@@ -262,9 +265,25 @@ def _resolve_short_paths(app, env, node, contnode):
     return None
 
 
+def _regen_code_builder_data(app):
+    """Regenerate _static/code-builder-data.js from _data/code-builder-data.yaml."""
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(app.srcdir) / "_data"))
+    try:
+        from build_data import build as _build  # type: ignore
+    finally:
+        sys.path.pop(0)
+    _build(
+        Path(app.srcdir) / "_data" / "code-builder-data.yaml",
+        Path(app.srcdir) / "_static" / "code-builder-data.js",
+    )
+
+
 def setup(app):
     from sphinx.events import EventListener
 
+    app.connect("builder-inited", _regen_code_builder_data)
     app.connect("missing-reference", _resolve_short_paths)
 
     listeners = app.events.listeners.get("autodoc-skip-member", [])
