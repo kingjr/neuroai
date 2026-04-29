@@ -115,8 +115,7 @@ html_css_files = [
 
 html_js_files = [
     "pipeline-accordion.js",
-    "code-highlight.js",  # shared by code-selector.js + code-builder.js
-    "code-selector.js",
+    "code-highlight.js",
     "code-builder-data.js",  # auto-generated from _data/code-builder-data.yaml
     "code-builder.js",
     "sidebar-nav.js",

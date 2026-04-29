@@ -2,7 +2,7 @@
    Reads `window.CB_DATA` (generated from docs/_data/code-builder-data.yaml)
    and renders bash + python snippets that wire a study (real public dataset
    when (neuro, stim) maps to one, or `FakeMulti` otherwise) through
-   neuralset's extractors / Segmenter, and (optionally) an sklearn
+   NeuralSet's extractors / Segmenter, and (optionally) an sklearn
    `cross_val_score` one-liner. The yaml-style python embeds the config as a
    triple-quoted string; for encode/decode tasks it wraps the pipeline in an
    `Experiment` model whose `score()` method is cached by `exca.TaskInfra`. */
@@ -62,7 +62,7 @@
       var pkg = Object.keys(pipExtras).length
         ? "'neuralset[" + Object.keys(pipExtras).join(",") + "]'"
         : "neuralset";
-      // Real-dataset studies live in companion packages (e.g. neuralfetch).
+      // Real-dataset studies live in companion packages (e.g. NeuralFetch).
       var extraPkgs = (study().pip_packages || []).slice();
       var pipLine = "pip install " + pkg;
       if (extraPkgs.length) pipLine += " " + extraPkgs.join(" ");

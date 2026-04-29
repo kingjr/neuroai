@@ -31,7 +31,8 @@ subsequent run reads from cache and finishes in a few seconds.
 
      <noscript>
        <p>This page requires JavaScript to assemble the code.
-       See the <a href="index.html">Quickstart</a> for a static example.</p>
+       See the <a href="auto_examples/walkthrough/index.html">Tutorials</a>
+       for static, copy-pasteable examples.</p>
      </noscript>
 
    </div>
@@ -39,6 +40,6 @@ subsequent run reads from cache and finishes in a few seconds.
 .. raw:: html
 
    <div class="page-nav">
-     <a href="encoding_decoding.html" class="page-nav-btn page-nav-btn--outline">&larr; Encoding &amp; Decoding</a>
-     <a href="glossary.html" class="page-nav-btn">Glossary &rarr;</a>
+     <a href="install.html" class="page-nav-btn page-nav-btn--outline">&larr; Installation</a>
+     <a href="auto_examples/walkthrough/index.html" class="page-nav-btn">Tutorials &rarr;</a>
    </div>

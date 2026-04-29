@@ -1,6 +1,6 @@
 /* code-highlight.js — Tiny Pygments-style highlighter for Python and bash.
-   Shared by code-selector.js and code-builder.js so the two interactive
-   pages render code blocks identically and stay in lock-step.
+   Used by code-builder.js; kept in its own file so future interactive
+   pages can reuse the same highlighter without dragging in the renderer.
    Exposes `window.codeHighlight = { python, bash, escapeHtml }`.        */
 
 (function () {
