@@ -156,6 +156,28 @@ window.CB_DATA = {
           },
           "x_expr": "batch.data[\"neuro\"].reshape(len(batch), -1)"
         },
+        "fnirs": {
+          "label": "fNIRS",
+          "cls": "FnirsExtractor",
+          "event_type": "Fnirs",
+          "kwargs": [
+            "frequency=10",
+            "picks=(\"fnirs\",)",
+            "scaler='RobustScaler'",
+            "baseline=(-0.1, 0.0)"
+          ],
+          "yaml_extra": [
+            "drop_bads=True",
+            "mne_cpus=4",
+            "compute_optical_density=False"
+          ],
+          "window": {
+            "start": -0.1,
+            "duration": 0.5
+          },
+          "t": 4,
+          "t_comment": "300ms @10Hz"
+        },
         "spike": {
           "label": "Spike",
           "cls": "SpikesExtractor",
@@ -229,6 +251,25 @@ window.CB_DATA = {
             "hop_length=256",
             "use_log_scale=True",
             "norm_audio=True"
+          ]
+        },
+        "video": {
+          "label": "Video",
+          "cls": "HuggingFaceVideo",
+          "pip": [
+            "all"
+          ],
+          "event_type": "Video",
+          "is_classification": false,
+          "l3_skip": "videomae+transformers ImagesKwargs(text=) compat \u2014 upstream",
+          "kwargs": [
+            "frequency=\"native\"",
+            "use_audio=False",
+            "aggregation=\"trigger\""
+          ],
+          "yaml_extra": [
+            "num_frames=8",
+            "max_imsize=224"
           ]
         },
         "classification": {

@@ -1034,6 +1034,7 @@ class Fnirs(MneRaw):
     - .hdr: NIRX format
     - .csv: Hitachi format
     - .txt: Boxy format
+    - .fif: round-tripped MNE raw (typically used in tests / synthetic data)
 
     """
 
@@ -1041,6 +1042,8 @@ class Fnirs(MneRaw):
         import mne
 
         ext = Path(self.filepath).suffix
+        if ext == ".fif":
+            return super()._read()
         with utils.ignore_all():
             return {
                 ".snirf": mne.io.read_raw_snirf,
