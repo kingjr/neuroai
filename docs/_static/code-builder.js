@@ -404,15 +404,13 @@
       var stu = study();
       lines.push("# 1. " + stu.comment);
       // Pass the *parent* studies dir; Study.download() resolves the
-      // study-name subfolder. The Study also gets its own `Cached`
-      // backend so that `study.run()` events are persisted between calls.
-      // (YAML mode keeps the explicit subfolder because the Experiment
-      // freezes the Study — see buildScriptYaml.)
-      lines.push("study = ns.Study(");
-      lines.push('    name="' + stu.name + '",');
-      lines.push("    path=STUDIES,");
-      lines.push('    infra={"backend": "Cached", "folder": CACHE},');
-      lines.push(")");
+      // study-name subfolder. `infra={"folder": CACHE}` enables caching
+      // of `study.run()` events between calls. (YAML mode keeps the
+      // explicit subfolder because the Experiment freezes the Study —
+      // see buildScriptYaml.)
+      lines.push(
+        'study = ns.Study(name="' + stu.name + '", path=STUDIES, infra={"folder": CACHE})'
+      );
       lines.push("");
       lines.push("# 2. Define extractors");
       // Real-data studies may pin extractor kwargs (e.g. allow_maxshield=True
@@ -484,8 +482,8 @@
         stimBlock.push(infraExtractor);
       }
 
-      // Study gets its own `Cached` backend so `study.run()` events are
-      // persisted between calls. Same `$CACHE` placeholder as the
+      // `infra: {folder: $CACHE}` enables caching of `study.run()`
+      // events between calls. Same `$CACHE` placeholder as the
       // extractor MapInfras.
       var yamlSections = [
         "# " + stu.comment,
@@ -493,7 +491,6 @@
         "  name: " + stu.name,
         "  path: $STUDIES/" + stu.name,
         "  infra:",
-        "    backend: Cached",
         "    folder: $CACHE",
         "segmenter:",
         "  start: " + win.start,

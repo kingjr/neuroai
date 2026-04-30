@@ -372,15 +372,12 @@ def _build_kwargs_script(
     lines.append("")
     lines.append(f"# 1. {stu['comment']}")
     # Parent dir only — Study.download() resolves the study-name subfolder
-    # for unfrozen instances. The Study also gets its own `Cached` backend
-    # so `study.run()` events are persisted between calls. (YAML mode
-    # keeps the explicit subfolder because the Experiment freezes the
-    # Study.)
-    lines.append("study = ns.Study(")
-    lines.append(f'    name="{stu["name"]}",')
-    lines.append("    path=STUDIES,")
-    lines.append('    infra={"backend": "Cached", "folder": CACHE},')
-    lines.append(")")
+    # for unfrozen instances. `infra={"folder": CACHE}` enables caching of
+    # `study.run()` events between calls. (YAML mode keeps the explicit
+    # subfolder because the Experiment freezes the Study.)
+    lines.append(
+        f'study = ns.Study(name="{stu["name"]}", path=STUDIES, infra={{"folder": CACHE}})'
+    )
     lines.append("")
     lines.append("# 2. Define extractors")
     # Real-data studies may pin extractor kwargs (e.g. allow_maxshield=True
@@ -500,16 +497,14 @@ def _build_yaml_script(
             _infra_to_yaml(comp["infra_literal"], 8),
         ]
 
-    # Study gets its own `Cached` backend so `study.run()` events are
-    # persisted between calls. Same `$CACHE` placeholder as the
-    # extractor MapInfras.
+    # `infra: {folder: $CACHE}` enables caching of `study.run()` events
+    # between calls. Same `$CACHE` placeholder as the extractor MapInfras.
     yaml_sections = [
         f"# {stu['comment']}",
         "study:",
         f"  name: {stu['name']}",
         f"  path: $STUDIES/{stu['name']}",
         "  infra:",
-        "    backend: Cached",
         "    folder: $CACHE",
         "segmenter:",
         f"  start: {win['start']}",
