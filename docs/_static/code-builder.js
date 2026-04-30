@@ -408,9 +408,11 @@
       // of `study.run()` events between calls. (YAML mode keeps the
       // explicit subfolder because the Experiment freezes the Study —
       // see buildScriptYaml.)
-      lines.push(
-        'study = ns.Study(name="' + stu.name + '", path=STUDIES, infra={"folder": CACHE})'
-      );
+      lines.push("study = ns.Study(");
+      lines.push('    name="' + stu.name + '",');
+      lines.push("    path=STUDIES,");
+      lines.push('    infra={"folder": CACHE},');
+      lines.push(")");
       lines.push("");
       lines.push("# 2. Define extractors");
       // Real-data studies may pin extractor kwargs (e.g. allow_maxshield=True

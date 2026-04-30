@@ -375,9 +375,11 @@ def _build_kwargs_script(
     # for unfrozen instances. `infra={"folder": CACHE}` enables caching of
     # `study.run()` events between calls. (YAML mode keeps the explicit
     # subfolder because the Experiment freezes the Study.)
-    lines.append(
-        f'study = ns.Study(name="{stu["name"]}", path=STUDIES, infra={{"folder": CACHE}})'
-    )
+    lines.append("study = ns.Study(")
+    lines.append(f'    name="{stu["name"]}",')
+    lines.append("    path=STUDIES,")
+    lines.append('    infra={"folder": CACHE},')
+    lines.append(")")
     lines.append("")
     lines.append("# 2. Define extractors")
     # Real-data studies may pin extractor kwargs (e.g. allow_maxshield=True
