@@ -2,7 +2,7 @@
 window.CB_DATA = {
   "default_study": {
     "name": "FakeMulti",
-    "comment": "Built-in synthetic multi-modal study (~2 MB) \u2014 covers any combination."
+    "comment": "Built-in synthetic multi-modal study (~2 MB) - covers any combination."
   },
   "studies": {
     "fmri-image": {
@@ -11,7 +11,7 @@ window.CB_DATA = {
         "neuralfetch",
         "awscli"
       ],
-      "comment": "Natural Scenes Dataset sample (Allen et al., 2022) \u2014 fMRI \u2194 natural images."
+      "comment": "Natural Scenes Dataset sample (Allen et al., 2022) - fMRI <-> natural images."
     },
     "fmri-audio": {
       "name": "Li2022PetitSample",
@@ -20,7 +20,7 @@ window.CB_DATA = {
         "openneuro-py",
         "praatio"
       ],
-      "comment": "Little Prince fMRI sample (Li et al., 2022) \u2014 fMRI \u2194 spoken story (audio + word + text)."
+      "comment": "Little Prince fMRI sample (Li et al., 2022) - fMRI <-> spoken story (audio + word + text)."
     },
     "fmri-text": {
       "name": "Li2022PetitSample",
@@ -32,7 +32,7 @@ window.CB_DATA = {
       "stim_kwargs": [
         "language=\"english\""
       ],
-      "comment": "Little Prince fMRI sample (Li et al., 2022) \u2014 fMRI \u2194 word/text events from the audiobook."
+      "comment": "Little Prince fMRI sample (Li et al., 2022) - fMRI <-> word/text events from the audiobook."
     },
     "meg-audio": {
       "name": "Bel2026PetitListenSample",
@@ -43,7 +43,7 @@ window.CB_DATA = {
       "neuro_kwargs": [
         "allow_maxshield=True"
       ],
-      "comment": "Petit Prince MEG listening sample (Bel et al., 2026) \u2014 MEG \u2194 spoken story."
+      "comment": "Petit Prince MEG listening sample (Bel et al., 2026) - MEG <-> spoken story."
     },
     "meg-text": {
       "name": "Bel2026PetitListenSample",
@@ -57,7 +57,7 @@ window.CB_DATA = {
       "stim_kwargs": [
         "language=\"french\""
       ],
-      "comment": "Petit Prince MEG listening sample (Bel et al., 2026) \u2014 MEG \u2194 word/text events from the audiobook."
+      "comment": "Petit Prince MEG listening sample (Bel et al., 2026) - MEG <-> word/text events from the audiobook."
     },
     "eeg-image": {
       "name": "Grootswagers2022HumanSample",
@@ -68,7 +68,7 @@ window.CB_DATA = {
         "osfclient",
         "openneuro-py"
       ],
-      "comment": "THINGS-EEG sample (Grootswagers et al., 2022) \u2014 EEG \u2194 natural images."
+      "comment": "THINGS-EEG sample (Grootswagers et al., 2022) - EEG <-> natural images."
     }
   },
   "axes": {

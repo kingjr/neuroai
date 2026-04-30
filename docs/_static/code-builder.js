@@ -91,8 +91,8 @@
     var EVENTS_LINE = "events = study.run()  # simple pd.DataFrame";
     function directionLabel() {
       return task().direction === "decoding"
-        ? "Decoding (brain → stim)"
-        : "Encoding (stim → brain)";
+        ? "Decoding (brain -> stim)"
+        : "Encoding (stim -> brain)";
     }
     function loadDemoLines(indent) {
       // Show one batch of 8 segments + the shape of each modality. Use the

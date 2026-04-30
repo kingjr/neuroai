@@ -139,9 +139,9 @@ _EVENTS_LINE = "events = study.run()  # simple pd.DataFrame"
 
 def _direction_label(task: dict) -> str:
     return (
-        "Decoding (brain → stim)"
+        "Decoding (brain -> stim)"
         if task.get("direction") == "decoding"
-        else "Encoding (stim → brain)"
+        else "Encoding (stim -> brain)"
     )
 
 
