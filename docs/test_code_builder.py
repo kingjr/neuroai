@@ -98,28 +98,39 @@ def _quote_pip(p: str) -> str:
 
 
 def _build_install(neuro: dict, stim: dict, stu: dict) -> str:
-    extras: list[str] = []
-    for p in (neuro.get("pip") or []) + (stim.get("pip") or []):
-        if p and p not in extras:
-            extras.append(p)
-    pkg = f"'neuralset[{','.join(extras)}]'" if extras else "neuralset"
-    extra_pkgs: list[str] = []
-    seen: set[str] = set()
-    for p in (
-        list(neuro.get("pip_packages") or [])
-        + list(stim.get("pip_packages") or [])
-        + list(stu.get("pip_packages") or [])
-    ):
-        if p and p not in seen:
-            seen.add(p)
-            extra_pkgs.append(p)
-    pip_line = f"pip install {pkg}"
-    if extra_pkgs:
-        pip_line += " " + " ".join(_quote_pip(p) for p in extra_pkgs)
-    lines = [pip_line]
+    """Render the bash install block with framework + dataset deps split.
+
+    Mirror of `buildInstall()` in `docs/_static/code-builder.js`. The output
+    is a multi-line string with two `pip install` calls (the dataset section
+    is omitted entirely for FakeMulti).
+    """
+
+    def _uniq(items: list[str]) -> list[str]:
+        seen: set[str] = set()
+        out: list[str] = []
+        for p in items:
+            if p and p not in seen:
+                seen.add(p)
+                out.append(p)
+        return out
+
+    extras = _uniq(list(neuro.get("pip") or []) + list(stim.get("pip") or []))
+    fw_pkgs = _uniq(
+        list(neuro.get("pip_packages") or []) + list(stim.get("pip_packages") or [])
+    )
+    ns_token = f"'neuralset[{','.join(extras)}]'" if extras else "neuralset"
+    fw_line = "pip install " + " ".join([ns_token] + [_quote_pip(p) for p in fw_pkgs])
+
+    lines = ["# NeuralSet + extractor dependencies", fw_line]
     for p in (neuro.get("post_install"), stim.get("post_install")):
         if p:
             lines.append(p)
+
+    ds_pkgs = list(stu.get("pip_packages") or [])
+    if ds_pkgs:
+        lines.append("")
+        lines.append(f"# Dataset: {stu['name']}")
+        lines.append("pip install " + " ".join(_quote_pip(p) for p in ds_pkgs))
     return "\n".join(lines)
 
 

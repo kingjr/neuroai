@@ -57,33 +57,33 @@
 
     // ── Section: bash install ─────────────────────────────────────────────
     // Quote any package spec carrying `extras` brackets so zsh/bash don't
-    // treat the `[...]` as a glob pattern (e.g. neuralfetch[quickstart]).
+    // treat the `[...]` as a glob pattern (e.g. `neuralset[tutorials]`).
     function quotePip(p) { return p.indexOf("[") >= 0 ? "'" + p + "'" : p; }
+    function uniq(arr) {
+      var seen = {}, out = [];
+      arr.forEach(function (p) { if (p && !seen[p]) { seen[p] = 1; out.push(p); } });
+      return out;
+    }
+    // Render the install block as two `pip install` calls so framework +
+    // extractor deps are visually separated from dataset deps. The dataset
+    // section is omitted entirely for FakeMulti (no `pip_packages`).
     function buildInstall() {
-      var pipExtras = {};
-      [].concat(neuro().pip || [], stim().pip || []).forEach(function (p) { pipExtras[p] = 1; });
-      var pkg = Object.keys(pipExtras).length
-        ? "'neuralset[" + Object.keys(pipExtras).join(",") + "]'"
-        : "neuralset";
-      // Combine extra packages declared on the modalities (e.g. mne-nirs for
-      // FnirsExtractor, h5py for SpikesExtractor) with those declared by the
-      // real-dataset study (NeuralFetch + per-study download deps), de-duped
-      // and quoted for zsh.
-      var extraPkgs = [];
-      var seen = {};
-      [].concat(
-        neuro().pip_packages || [],
-        stim().pip_packages || [],
-        study().pip_packages || []
-      ).forEach(function (p) {
-        if (p && !seen[p]) { seen[p] = 1; extraPkgs.push(p); }
-      });
-      var pipLine = "pip install " + pkg;
-      if (extraPkgs.length) pipLine += " " + extraPkgs.map(quotePip).join(" ");
-      var lines = [pipLine];
+      var extras  = uniq([].concat(neuro().pip || [], stim().pip || []));
+      var fwPkgs  = uniq([].concat(neuro().pip_packages || [], stim().pip_packages || []));
+      var nsToken = extras.length ? "'neuralset[" + extras.join(",") + "]'" : "neuralset";
+      var fwLine  = "pip install " + [nsToken].concat(fwPkgs.map(quotePip)).join(" ");
+
+      var lines = ["# NeuralSet + extractor dependencies", fwLine];
       [neuro().post_install, stim().post_install].forEach(function (p) {
         if (p) lines.push(p);
       });
+
+      var dsPkgs = study().pip_packages || [];
+      if (dsPkgs.length) {
+        lines.push("");
+        lines.push("# Dataset: " + study().name);
+        lines.push("pip install " + dsPkgs.map(quotePip).join(" "));
+      }
       return lines.join("\n");
     }
 

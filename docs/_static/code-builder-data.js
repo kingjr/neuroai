@@ -8,42 +8,53 @@ window.CB_DATA = {
     "fmri-image": {
       "name": "Allen2022MassiveSample",
       "pip_packages": [
-        "neuralfetch[quickstart]"
+        "neuralfetch",
+        "awscli"
       ],
       "comment": "Natural Scenes Dataset sample (Allen et al., 2022) \u2014 fMRI \u2194 natural images."
     },
     "fmri-audio": {
       "name": "Li2022PetitSample",
       "pip_packages": [
-        "neuralfetch[quickstart]"
+        "neuralfetch",
+        "openneuro-py",
+        "praatio"
       ],
       "comment": "Little Prince fMRI sample (Li et al., 2022) \u2014 fMRI \u2194 spoken story (audio + word + text)."
     },
     "fmri-text": {
       "name": "Li2022PetitSample",
       "pip_packages": [
-        "neuralfetch[quickstart]"
+        "neuralfetch",
+        "openneuro-py",
+        "praatio"
       ],
       "comment": "Little Prince fMRI sample (Li et al., 2022) \u2014 fMRI \u2194 word/text events from the audiobook."
     },
     "meg-audio": {
       "name": "Bel2026PetitListenSample",
       "pip_packages": [
-        "neuralfetch[quickstart]"
+        "neuralfetch",
+        "openneuro-py"
       ],
       "comment": "Petit Prince MEG listening sample (Bel et al., 2026) \u2014 MEG \u2194 spoken story."
     },
     "meg-text": {
       "name": "Bel2026PetitListenSample",
       "pip_packages": [
-        "neuralfetch[quickstart]"
+        "neuralfetch",
+        "openneuro-py"
       ],
       "comment": "Petit Prince MEG listening sample (Bel et al., 2026) \u2014 MEG \u2194 word/text events from the audiobook."
     },
     "eeg-image": {
       "name": "Grootswagers2022HumanSample",
       "pip_packages": [
-        "neuralfetch[quickstart]"
+        "neuralfetch",
+        "pyunpack",
+        "boto3",
+        "osfclient",
+        "openneuro-py"
       ],
       "comment": "THINGS-EEG sample (Grootswagers et al., 2022) \u2014 EEG \u2194 natural images."
     }
@@ -230,8 +241,9 @@ window.CB_DATA = {
         "image": {
           "label": "Image",
           "cls": "HuggingFaceImage",
-          "pip": [
-            "all"
+          "pip_packages": [
+            "transformers",
+            "torchvision"
           ],
           "event_type": "Image",
           "is_classification": false,
@@ -250,8 +262,10 @@ window.CB_DATA = {
           "label": "Audio",
           "cls": "MelSpectrum",
           "event_type": "Audio",
-          "pip": [
-            "all"
+          "pip_packages": [
+            "julius",
+            "torchaudio",
+            "soundfile"
           ],
           "is_classification": false,
           "kwargs": [
@@ -268,8 +282,11 @@ window.CB_DATA = {
         "video": {
           "label": "Video",
           "cls": "HuggingFaceVideo",
-          "pip": [
-            "all"
+          "pip_packages": [
+            "transformers",
+            "torchvision",
+            "julius",
+            "moviepy"
           ],
           "event_type": "Video",
           "is_classification": false,
