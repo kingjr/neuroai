@@ -29,6 +29,9 @@ window.CB_DATA = {
         "openneuro-py",
         "praatio"
       ],
+      "stim_kwargs": [
+        "language=\"english\""
+      ],
       "comment": "Little Prince fMRI sample (Li et al., 2022) \u2014 fMRI \u2194 word/text events from the audiobook."
     },
     "meg-audio": {
@@ -50,6 +53,9 @@ window.CB_DATA = {
       ],
       "neuro_kwargs": [
         "allow_maxshield=True"
+      ],
+      "stim_kwargs": [
+        "language=\"french\""
       ],
       "comment": "Petit Prince MEG listening sample (Bel et al., 2026) \u2014 MEG \u2194 word/text events from the audiobook."
     },

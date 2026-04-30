@@ -44,6 +44,8 @@ studies:
   fmri-text:
     name: Li2022PetitSample
     pip_packages: ["neuralfetch", "openneuro-py", "praatio"]
+    # Li's Petit Prince audiobook is in English.
+    stim_kwargs: ['language="english"']
     comment: "Little Prince fMRI sample (Li et al., 2022) — fMRI ↔ word/text events from the audiobook."
   meg-audio:
     name: Bel2026PetitListenSample
@@ -55,6 +57,8 @@ studies:
     name: Bel2026PetitListenSample
     pip_packages: ["neuralfetch", "openneuro-py"]
     neuro_kwargs: ["allow_maxshield=True"]
+    # Bel's Petit Prince audiobook is in French.
+    stim_kwargs: ['language="french"']
     comment: "Petit Prince MEG listening sample (Bel et al., 2026) — MEG ↔ word/text events from the audiobook."
   eeg-image:
     name: Grootswagers2022HumanSample
