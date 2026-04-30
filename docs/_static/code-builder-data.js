@@ -86,12 +86,6 @@ window.CB_DATA = {
             "scaler='RobustScaler'",
             "baseline=(-0.1, 0.0)"
           ],
-          "yaml_extra": [
-            "notch_filter=60.0",
-            "apply_hilbert=False",
-            "drop_bads=True",
-            "mne_cpus=4"
-          ],
           "window": {
             "start": -0.1,
             "duration": 0.5
@@ -109,12 +103,6 @@ window.CB_DATA = {
             "scaler='RobustScaler'",
             "baseline=(-0.1, 0.0)"
           ],
-          "yaml_extra": [
-            "notch_filter=60.0",
-            "apply_hilbert=False",
-            "drop_bads=True",
-            "mne_cpus=4"
-          ],
           "window": {
             "start": -0.1,
             "duration": 0.5
@@ -131,11 +119,6 @@ window.CB_DATA = {
             "filter=(0.5, 40)",
             "picks=(\"seeg\",)"
           ],
-          "yaml_extra": [
-            "notch_filter=60.0",
-            "drop_bads=True",
-            "mne_cpus=4"
-          ],
           "window": {
             "start": -0.1,
             "duration": 0.5
@@ -150,10 +133,6 @@ window.CB_DATA = {
           "kwargs": [
             "frequency=256",
             "scaler='RobustScaler'"
-          ],
-          "yaml_extra": [
-            "drop_bads=True",
-            "mne_cpus=4"
           ],
           "window": {
             "start": -0.1,
@@ -171,10 +150,6 @@ window.CB_DATA = {
           ],
           "kwargs": [
             "offset=5"
-          ],
-          "yaml_extra": [
-            "fwhm=4.0",
-            "allow_missing=False"
           ],
           "window": {
             "start": 0.0,
@@ -195,11 +170,6 @@ window.CB_DATA = {
             "scaler='RobustScaler'",
             "baseline=(-0.1, 0.0)"
           ],
-          "yaml_extra": [
-            "drop_bads=True",
-            "mne_cpus=4",
-            "compute_optical_density=False"
-          ],
           "window": {
             "start": -0.1,
             "duration": 0.5
@@ -218,10 +188,6 @@ window.CB_DATA = {
             "frequency=200",
             "baseline=(-0.1, 0.0)",
             "scaler='RobustScaler'"
-          ],
-          "yaml_extra": [
-            "clamp=10.0",
-            "scale_factor=1.0"
           ],
           "window": {
             "start": -0.1,
@@ -247,8 +213,7 @@ window.CB_DATA = {
           "is_classification": false,
           "kwargs": [
             "aggregation=\"trigger\""
-          ],
-          "yaml_extra": []
+          ]
         },
         "image": {
           "label": "Image",
@@ -262,12 +227,6 @@ window.CB_DATA = {
           "kwargs": [
             "model_name=\"facebook/dinov2-small\"",
             "aggregation=\"trigger\""
-          ],
-          "yaml_extra": [
-            "imsize=224",
-            "batch_size=16",
-            "layer_aggregation=\"mean\"",
-            "token_aggregation=\"mean\""
           ]
         },
         "audio": {
@@ -283,12 +242,6 @@ window.CB_DATA = {
           "kwargs": [
             "n_mels=40",
             "aggregation=\"trigger\""
-          ],
-          "yaml_extra": [
-            "n_fft=1024",
-            "hop_length=256",
-            "use_log_scale=True",
-            "norm_audio=True"
           ]
         },
         "video": {
@@ -307,14 +260,10 @@ window.CB_DATA = {
             "frequency=\"native\"",
             "use_audio=False",
             "aggregation=\"trigger\""
-          ],
-          "yaml_extra": [
-            "num_frames=8",
-            "max_imsize=224"
           ]
         },
         "classification": {
-          "label": "Class",
+          "label": "Categories",
           "cls": "LabelEncoder",
           "event_type": "Stimulus",
           "is_classification": true,
@@ -324,9 +273,6 @@ window.CB_DATA = {
             "event_field=\"description\"",
             "return_one_hot=True",
             "aggregation=\"first\""
-          ],
-          "yaml_extra": [
-            "treat_missing_as_separate_class=False"
           ]
         }
       }
@@ -336,7 +282,7 @@ window.CB_DATA = {
       "default": "load",
       "options": {
         "load": {
-          "label": "Load only",
+          "label": "Load data",
           "needs_ml": false
         },
         "decoding": {
@@ -352,19 +298,15 @@ window.CB_DATA = {
       }
     },
     "model": {
-      "label": "Model",
+      "label": "Training",
       "default": "ridge",
       "options": {
         "ridge": {
-          "label": "Ridge",
+          "label": "sklearn",
           "kind": "ridge"
         },
-        "sgd": {
-          "label": "SGD",
-          "kind": "sgd"
-        },
         "torch": {
-          "label": "Torch",
+          "label": "PyTorch",
           "kind": "torch"
         }
       }

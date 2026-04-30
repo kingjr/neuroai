@@ -11,10 +11,6 @@
 # inside the extractor call. Tuples are written in Python syntax and converted
 # to YAML flow-lists for the yaml-style renderer.
 #
-# `yaml_extra` is an *additional* list of "k=v" strings that is appended to
-# `kwargs` only in the YAML-style renderer — used to showcase the wider set of
-# parameters that the declarative config makes ergonomic.
-#
 # For the ML one-liner each neuro option provides either:
 #   t: <int>          — integer time index used as `batch.data["neuro"][:, :, t]`
 #   t_comment: <str>  — appended after `t = N` as a `# comment`
@@ -81,11 +77,6 @@ axes:
           - "filter=(0.5, 30)"
           - "scaler='RobustScaler'"
           - "baseline=(-0.1, 0.0)"
-        yaml_extra:
-          - "notch_filter=60.0"
-          - "apply_hilbert=False"
-          - "drop_bads=True"
-          - "mne_cpus=4"
         window: {start: -0.1, duration: 0.5}
         t: 48
         t_comment: "300ms @120Hz"
@@ -99,11 +90,6 @@ axes:
           - "filter=(0.5, 40)"
           - "scaler='RobustScaler'"
           - "baseline=(-0.1, 0.0)"
-        yaml_extra:
-          - "notch_filter=60.0"
-          - "apply_hilbert=False"
-          - "drop_bads=True"
-          - "mne_cpus=4"
         window: {start: -0.1, duration: 0.5}
         t: 48
         t_comment: "300ms @120Hz"
@@ -116,10 +102,6 @@ axes:
           - "frequency=100"
           - "filter=(0.5, 40)"
           - 'picks=("seeg",)'
-        yaml_extra:
-          - "notch_filter=60.0"
-          - "drop_bads=True"
-          - "mne_cpus=4"
         window: {start: -0.1, duration: 0.5}
         t: 40
         t_comment: "300ms @100Hz"
@@ -133,9 +115,6 @@ axes:
         kwargs:
           - "frequency=256"
           - "scaler='RobustScaler'"
-        yaml_extra:
-          - "drop_bads=True"
-          - "mne_cpus=4"
         window: {start: -0.1, duration: 0.5}
         t: 102
         t_comment: "300ms @256Hz"
@@ -144,13 +123,11 @@ axes:
         label: "fMRI"
         cls: FmriExtractor
         event_type: Fmri
-        # `nilearn` ships with `neuralset[tutorials]`.
+        # `nilearn` ships with `neuralset[tutorials]` (used by FmriExtractor
+        # internals for cleaning/projection helpers).
         pip: ["tutorials"]
         kwargs:
           - "offset=5"
-        yaml_extra:
-          - "fwhm=4.0"
-          - "allow_missing=False"
         window: {start: 0.0, duration: 2.0}
         x_expr: 'batch.data["neuro"].reshape(len(batch), -1)'
 
@@ -166,10 +143,6 @@ axes:
           - 'picks=("fnirs",)'
           - "scaler='RobustScaler'"
           - "baseline=(-0.1, 0.0)"
-        yaml_extra:
-          - "drop_bads=True"
-          - "mne_cpus=4"
-          - "compute_optical_density=False"
         window: {start: -0.1, duration: 0.5}
         t: 4
         t_comment: "300ms @10Hz"
@@ -184,9 +157,6 @@ axes:
           - "frequency=200"
           - "baseline=(-0.1, 0.0)"
           - "scaler='RobustScaler'"
-        yaml_extra:
-          - "clamp=10.0"
-          - "scale_factor=1.0"
         window: {start: -0.1, duration: 0.5}
         t: 60
         t_comment: "200ms @200Hz"
@@ -206,7 +176,6 @@ axes:
         # `language` flows from the Word event itself (FakeMulti sets it).
         kwargs:
           - 'aggregation="trigger"'
-        yaml_extra: []
 
       image:
         label: "Image"
@@ -220,11 +189,6 @@ axes:
         kwargs:
           - 'model_name="facebook/dinov2-small"'
           - 'aggregation="trigger"'
-        yaml_extra:
-          - "imsize=224"
-          - "batch_size=16"
-          - 'layer_aggregation="mean"'
-          - 'token_aggregation="mean"'
 
       audio:
         label: "Audio"
@@ -238,11 +202,6 @@ axes:
         kwargs:
           - "n_mels=40"
           - 'aggregation="trigger"'
-        yaml_extra:
-          - "n_fft=1024"
-          - "hop_length=256"
-          - "use_log_scale=True"
-          - "norm_audio=True"
 
       video:
         label: "Video"
@@ -260,12 +219,9 @@ axes:
           - 'frequency="native"'
           - "use_audio=False"
           - 'aggregation="trigger"'
-        yaml_extra:
-          - "num_frames=8"
-          - "max_imsize=224"
 
       classification:
-        label: "Class"
+        label: "Categories"
         cls: LabelEncoder
         event_type: Stimulus
         is_classification: true
@@ -276,30 +232,26 @@ axes:
           - 'event_field="description"'
           - 'return_one_hot=True'
           - 'aggregation="first"'
-        yaml_extra:
-          - "treat_missing_as_separate_class=False"
 
   task:
     label: "Task"
     default: load
     options:
-      load:     {label: "Load only",  needs_ml: false}
+      load:     {label: "Load data",  needs_ml: false}
       decoding: {label: "Decoding",   needs_ml: true,  direction: decoding}
       encoding: {label: "Encoding",   needs_ml: true,  direction: encoding}
 
-  # Only meaningful for encoding/decoding. The Model axis is hidden in the UI
-  # when Task is "Load only". `kind` selects the rendering branch in
+  # Only meaningful for encoding/decoding. The Training axis is hidden in
+  # the UI when Task is "Load data". `kind` selects the rendering branch in
   # code-builder.js / test_code_builder.py.
   #   - ridge: classic full-RAM `dset.load_all()` + `cross_val_score`
-  #   - sgd:   streaming `partial_fit` over a `DataLoader` (online sklearn)
-  #   - torch: mini-batch training over a `DataLoader` with manual SGD
+  #   - torch: mini-batch training over a `DataLoader` with manual Adam
   model:
-    label: "Model"
+    label: "Training"
     default: ridge
     options:
-      ridge: {label: "Ridge",   kind: ridge}
-      sgd:   {label: "SGD",     kind: sgd}
-      torch: {label: "Torch",   kind: torch}
+      ridge: {label: "sklearn", kind: ridge}
+      torch: {label: "PyTorch", kind: torch}
 
   style:
     label: "Config"

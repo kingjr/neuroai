@@ -7,7 +7,7 @@
 """Multi-modal synthetic study used by the docs Code Builder page.
 
 Generates a single shared dataset on disk that exposes events for every
-neuro modality (MEG / EEG / iEEG / EMG / fMRI / Spike / fNIRS) and every
+neuro modality (MEG / EEG / iEEG / EMG / fMRI / Spikes / fNIRS) and every
 stimulus type (Word / Image / Audio / Video / classification ``Stimulus``)
 the Code Builder exposes — so any (neuro × stim) combination yields a
 runnable script.

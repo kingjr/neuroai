@@ -5,43 +5,25 @@
    NeuralSet's extractors / Segmenter, and (optionally) an sklearn
    `cross_val_score` one-liner. The yaml-style python embeds the config as a
    triple-quoted string; for encode/decode tasks it wraps the pipeline in an
-   `Experiment` model whose `score()` method is cached by `exca.TaskInfra`. */
+   `Experiment` model whose `score()` method is cached by `exca.TaskInfra`.
+
+   Architecture
+   ────────────
+   `createRenderer(DATA, sel)` is the pure renderer — closes over the data
+   and the live selection, returns `{buildInstall, buildScriptKwargs,
+   buildScriptYaml}`. No DOM access. The browser bootstrap below wires it
+   to `<div class="code-builder">`; the Node fixture generator at
+   `docs/_data/render_fixtures.mjs` reuses the same factory to freeze
+   golden snapshots used by `docs/test_code_builder.py`. */
 
 (function () {
-  if (typeof window === "undefined") return;
+  var AXIS_ORDER = ["neuro", "stim", "task", "model", "compute", "style"];
 
-  function init() {
-    var root = document.querySelector(".code-builder");
-    if (!root || !window.CB_DATA) return;
-
-    var DATA = window.CB_DATA;
+  // ── Pure renderer factory (no DOM) ────────────────────────────────────────
+  function createRenderer(DATA, sel) {
     var AXES = DATA.axes;
-    var AXIS_ORDER = ["neuro", "stim", "task", "model", "style", "compute"];
 
-    // Selection starts at each axis's default — page is fully populated
-    // on load (no progressive reveal needed).
-    var sel = {};
-    AXIS_ORDER.forEach(function (a) { sel[a] = AXES[a].default; });
-
-    // ── DOM helpers ───────────────────────────────────────────────────────
-    function el(tag, cls, html) {
-      var e = document.createElement(tag);
-      if (cls) e.className = cls;
-      if (html != null) e.innerHTML = html;
-      return e;
-    }
-    var H = window.codeHighlight || {
-      python: function (s) { return s; },
-      bash:   function (s) { return s; },
-      escapeHtml: function (s) {
-        return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      },
-    };
-    var escapeHtml = H.escapeHtml;
-    var highlightPython = H.python;
-    var highlightBash = H.bash;
-
-    // ── Resolvers ─────────────────────────────────────────────────────────
+    // ── Resolvers ───────────────────────────────────────────────────────────
     function neuro() { return AXES.neuro.options[sel.neuro]; }
     function stim()  { return AXES.stim.options[sel.stim]; }
     function task()  { return AXES.task.options[sel.task]; }
@@ -55,7 +37,7 @@
       return (DATA.studies && DATA.studies[key]) || DATA.default_study;
     }
 
-    // ── Section: bash install ─────────────────────────────────────────────
+    // ── Section: bash install ───────────────────────────────────────────────
     // Quote any package spec carrying `extras` brackets so zsh/bash don't
     // treat the `[...]` as a glob pattern (e.g. `neuralset[tutorials]`).
     function quotePip(p) { return p.indexOf("[") >= 0 ? "'" + p + "'" : p; }
@@ -87,7 +69,7 @@
       return lines.join("\n");
     }
 
-    // ── Helpers shared by both rendering styles ───────────────────────────
+    // ── Helpers shared by both rendering styles ─────────────────────────────
     var EVENTS_LINE = "events = study.run()  # simple pd.DataFrame";
     function directionLabel() {
       return task().direction === "decoding"
@@ -102,8 +84,8 @@
       return [
         pad + "loader = DataLoader(dset, batch_size=8, collate_fn=dset.collate_fn)",
         pad + "batch = next(iter(loader))",
-        pad + 'print(batch.data["neuro"].shape)',
-        pad + 'print(batch.data["stim"].shape)',
+        pad + "print('neuro', batch.data[\"neuro\"].shape)",
+        pad + "print('stim', batch.data[\"stim\"].shape)",
       ];
     }
     // Imports needed by the load-only demo (DataLoader). ML tasks usually
@@ -115,7 +97,7 @@
       return ["from torch.utils.data import DataLoader"];
     }
 
-    // ── Multiline call helper ─────────────────────────────────────────────
+    // ── Multiline call helper ───────────────────────────────────────────────
     // Given a list of "k=v" fragments and an optional trailing one (e.g.
     // `infra=infra`), produce:
     //
@@ -133,7 +115,7 @@
         + ",\n)";
     }
 
-    // ── kwargs list → YAML mapping block ──────────────────────────────────
+    // ── kwargs list → YAML mapping block ────────────────────────────────────
     function pyValueToYaml(v) {
       v = v.trim();
       // Python tuple → YAML flow-list: ("seeg",) -> [seeg]; (0.5, 30) -> [0.5, 30]
@@ -159,13 +141,10 @@
       }).join("\n");
     }
 
-    // ── ML body ───────────────────────────────────────────────────────────
-    // Three flavours, switched by `model()`:
+    // ── ML body ─────────────────────────────────────────────────────────────
+    // Two flavours, switched by `model()`:
     //   * ridge → classic full-RAM `dset.load_all()` + cross_val_score (the
     //             "fits in memory" sklearn one-liner).
-    //   * sgd   → streaming `partial_fit` over a DataLoader, reporting the
-    //             final batch's MSE / 1 - accuracy (online sklearn — same
-    //             streaming shape as torch but with sklearn estimators).
     //   * torch → mini-batch training over a DataLoader with manual
     //             zero_grad / loss / step loop (showcases that a NeuralSet
     //             dataset plugs straight into the standard PyTorch
@@ -204,7 +183,6 @@
       return {
         isClass: isClass, isDec: isDec, tLines: tLines,
         xNeuro: xNeuro, yStim: yStim, xStim: xStim,
-        stimFlat: stimFlat,
       };
     }
 
@@ -219,37 +197,22 @@
           "from torch.utils.data import DataLoader",
         ];
       }
+      // ridge: classic full-RAM `dset.load_all()` + `cross_val_score`.
       var e = _mlExprs();
-      var imps = [];
-      if (m.kind === "ridge") {
-        imps.push("from sklearn.linear_model import "
-          + ((e.isDec && e.isClass) ? "RidgeClassifier" : "Ridge"));
-        imps.push("from sklearn.model_selection import cross_val_score");
-        return imps;
-      }
-      // sgd: streaming via partial_fit on a DataLoader, mirroring the torch
-      // path but with sklearn estimators. We report a per-batch loss
-      // (final batch's MSE for regression, error rate for classification).
-      imps.push("from torch.utils.data import DataLoader");
-      if (e.isDec && e.isClass) {
-        imps.push("from sklearn.linear_model import SGDClassifier");
-        imps.push("from sklearn.metrics import accuracy_score");
-      } else {
-        imps.push("from sklearn.linear_model import SGDRegressor");
-        // SGDRegressor is single-target; wrap for multi-output regression.
-        imps.push("from sklearn.multioutput import MultiOutputRegressor");
-        imps.push("from sklearn.metrics import mean_squared_error");
-      }
-      return imps;
+      return [
+        "from sklearn.linear_model import "
+          + ((e.isDec && e.isClass) ? "RidgeClassifier" : "Ridge"),
+        "from sklearn.model_selection import cross_val_score",
+      ];
     }
 
     function mlLabel() {
       var t = task();
       if (!t.needs_ml) return "score";
       var m = model();
-      // Both streaming branches report a per-batch training loss; only the
+      // The torch branch reports a per-batch training loss; only the
       // Ridge / cross_val_score branch yields a "score" metric.
-      if (m.kind === "torch" || m.kind === "sgd") return "final loss";
+      if (m.kind === "torch") return "final loss";
       var s = stim();
       var isClass = !!s.is_classification;
       var isDec = (t.direction === "decoding");
@@ -257,10 +220,9 @@
     }
 
     // The Python expression printed in the f-string / returned by
-    // Experiment.score(). The streaming branches expose `loss` from inside
-    // the training loop (sklearn returns a `float`, torch a 0-d tensor —
-    // both work in `f"{...:.3f}"` and `float(...)`); the Ridge branch
-    // yields a CV `scores` ndarray.
+    // Experiment.score(). The torch branch exposes `loss` from inside the
+    // training loop (a 0-d tensor — works in both `f"{...:.3f}"` and
+    // `float(...)`); the Ridge branch yields a CV `scores` ndarray.
     function mlMetricExpr() {
       return model().kind === "ridge" ? "scores.mean()" : "loss";
     }
@@ -291,11 +253,12 @@
         var lines = [];
         lines.push(pad + "loader = DataLoader(dset, batch_size=32, collate_fn=dset.collate_fn, shuffle=True)");
         e.tLines.forEach(function (l) { lines.push(pad + l); });
-        // Peek one batch only to size the LazyLinear head; the actual training
+        // Peek one batch only to size the Linear head; the actual training
         // pass starts fresh from `loader`.
         lines.push(pad + "batch = next(iter(loader))");
-        lines.push(pad + "model = nn.LazyLinear(" + outDimExpr + ")");
-        lines.push(pad + "opt   = optim.SGD(model.parameters(), lr=0.01, weight_decay=0.01)");
+        lines.push(pad + "X = " + X);
+        lines.push(pad + "model = nn.Linear(X.shape[-1], " + outDimExpr + ")");
+        lines.push(pad + "opt   = optim.Adam(model.parameters(), lr=1e-3)");
         lines.push(pad + "for batch in loader:");
         lines.push(pad + "    X = " + X);
         lines.push(pad + "    y = " + y);
@@ -303,36 +266,6 @@
         lines.push(pad + "    loss = " + lossFn + "(model(X), y)");
         lines.push(pad + "    loss.backward()");
         lines.push(pad + "    opt.step()");
-        return lines;
-      }
-
-      if (m.kind === "sgd") {
-        // Streaming online learning via `partial_fit` — same DataLoader
-        // pattern as the torch branch, just with an sklearn estimator. We
-        // report the loss on the final batch (MSE for regression,
-        // 1 - accuracy for classification) so the metric is comparable
-        // across the two streaming branches.
-        var lines = [];
-        lines.push(pad + "loader = DataLoader(dset, batch_size=32, collate_fn=dset.collate_fn, shuffle=True)");
-        e.tLines.forEach(function (l) { lines.push(pad + l); });
-        if (e.isDec && e.isClass) {
-          // SGDClassifier needs the full class set on the very first call;
-          // we read it from a peek of the one-hot stim's last dim.
-          lines.push(pad + 'classes = range(next(iter(loader)).data["stim"].shape[-1])');
-          lines.push(pad + "model = SGDClassifier()");
-          lines.push(pad + "for batch in loader:");
-          lines.push(pad + "    X = " + X);
-          lines.push(pad + "    y = " + y);
-          lines.push(pad + "    model.partial_fit(X, y, classes=classes)");
-          lines.push(pad + "    loss = 1.0 - accuracy_score(y, model.predict(X))");
-        } else {
-          lines.push(pad + "model = MultiOutputRegressor(SGDRegressor())");
-          lines.push(pad + "for batch in loader:");
-          lines.push(pad + "    X = " + X);
-          lines.push(pad + "    y = " + y);
-          lines.push(pad + "    model.partial_fit(X, y)");
-          lines.push(pad + "    loss = mean_squared_error(y, model.predict(X))");
-        }
         return lines;
       }
 
@@ -348,7 +281,7 @@
       return lines;
     }
 
-    // ── infra_literal helpers (shared by kwargs + yaml renderers) ────────
+    // ── infra_literal helpers (shared by kwargs + yaml renderers) ──────────
     // The YAML stores `infra_literal` as a JSON object string (e.g.
     // `'{"folder": "$CACHE", "cluster": "slurm"}'`) — parse it once and
     // emit it as either a Python dict literal (kwargs) or YAML key/value
@@ -370,7 +303,10 @@
         else rhs = JSON.stringify(v);
         return JSON.stringify(k) + ": " + rhs;
       });
-      return "{" + parts.join(", ") + "}";
+      // Break multi-key dicts (e.g. slurm) onto separate lines for
+      // readability; single-key dicts (local cache) stay on one line.
+      if (parts.length <= 1) return "{" + parts.join(", ") + "}";
+      return "{\n    " + parts.join(",\n    ") + ",\n}";
     }
     function infraToYamlBlock(infraLiteral, indentSpaces) {
       var pad = " ".repeat(indentSpaces);
@@ -381,7 +317,7 @@
       }).join("\n");
     }
 
-    // ── kwargs-style python script ────────────────────────────────────────
+    // ── kwargs-style python script ──────────────────────────────────────────
     function buildScriptKwargs() {
       var n = neuro(), s = stim(), c = comp(), t = task();
       var win = n.window;
@@ -397,21 +333,21 @@
       loadImports().forEach(function (l) { lines.push(l); });
       lines.push("");
       lines.push('CACHE = Path.home() / "neuroai_data" / ".cache"');
-      lines.push('STUDIES = Path.home() / "neuroai_data" / ".studies"');
+      lines.push('STUDIES = Path.home() / "neuroai_data" / "studies"');
       lines.push("STUDIES.mkdir(parents=True, exist_ok=True)");
       lines.push("infra = " + cInfra);
       lines.push("");
       var stu = study();
       lines.push("# 1. " + stu.comment);
       // Pass the *parent* studies dir; Study.download() resolves the
-      // study-name subfolder. `infra={"folder": CACHE}` enables caching
-      // of `study.run()` events between calls. (YAML mode keeps the
-      // explicit subfolder because the Experiment freezes the Study —
-      // see buildScriptYaml.)
+      // study-name subfolder. `infra_timelines={"folder": CACHE}` caches
+      // each timeline's events independently between calls. (YAML mode
+      // keeps the explicit subfolder because the Experiment freezes the
+      // Study — see buildScriptYaml.)
       lines.push("study = ns.Study(");
       lines.push('    name="' + stu.name + '",');
       lines.push("    path=STUDIES,");
-      lines.push('    infra={"folder": CACHE},');
+      lines.push('    infra_timelines={"folder": CACHE},');
       lines.push(")");
       lines.push("");
       lines.push("# 2. Define extractors");
@@ -420,14 +356,14 @@
       // kwargs so the rendered call carries them.
       var nKwargs = (n.kwargs || []).concat(stu.neuro_kwargs || []);
       var sKwargs = (s.kwargs || []).concat(stu.stim_kwargs || []);
-      lines.push(multilineCall("neuro_ext = ns.extractors." + n.cls, nKwargs, "infra=infra"));
-      lines.push(multilineCall("stim_ext  = ns.extractors." + s.cls, sKwargs, sTrailing));
+      lines.push(multilineCall("neuro = ns.extractors." + n.cls, nKwargs, "infra=infra"));
+      lines.push(multilineCall("stim  = ns.extractors." + s.cls, sKwargs, sTrailing));
       lines.push("");
       lines.push("# 3. Segment around each \"" + s.event_type + "\" event");
       lines.push("segmenter = ns.Segmenter(");
       lines.push("    start=" + win.start + ", duration=" + win.duration + ",");
       lines.push("    trigger_query='type==\"" + s.event_type + "\"',");
-      lines.push("    extractors=dict(neuro=neuro_ext, stim=stim_ext),");
+      lines.push("    extractors=dict(neuro=neuro, stim=stim),");
       lines.push("    drop_incomplete=True,");
       lines.push(")");
       lines.push("");
@@ -452,15 +388,15 @@
       return lines.join("\n");
     }
 
-    // ── yaml-style — YAML embedded inline as a Python string ──────────────
+    // ── yaml-style — YAML embedded inline as a Python string ────────────────
     function buildScriptYaml() {
       var n = neuro(), s = stim(), c = comp(), t = task();
       var win = n.window;
       var needsML = !!t.needs_ml;
 
       // Build the YAML body (inserted into a triple-quoted Python string).
-      // Note: yaml-mode appends `yaml_extra` to each extractor's kwargs to
-      // showcase the wider parameter surface that declarative config exposes.
+      // Both renderers expose the same kwargs so the kwargs-vs-YAML choice
+      // is purely a syntax/ergonomics decision, not a feature comparison.
       var infraExtractor = infraToYamlBlock(c.infra_literal, 8);
       // Experiment-level infra block (TaskInfra) — same literal as the
       // extractor MapInfras so cache + slurm flip atomically. Only emitted
@@ -471,8 +407,8 @@
         : null;
 
       var stu = study();
-      var nKw = (n.kwargs || []).concat(n.yaml_extra || []).concat(stu.neuro_kwargs || []);
-      var sKw = (s.kwargs || []).concat(s.yaml_extra || []).concat(stu.stim_kwargs || []);
+      var nKw = (n.kwargs || []).concat(stu.neuro_kwargs || []);
+      var sKw = (s.kwargs || []).concat(stu.stim_kwargs || []);
 
       var stimBlock = [
         "    stim:",
@@ -484,15 +420,15 @@
         stimBlock.push(infraExtractor);
       }
 
-      // `infra: {folder: $CACHE}` enables caching of `study.run()`
-      // events between calls. Same `$CACHE` placeholder as the
-      // extractor MapInfras.
+      // `infra_timelines: {folder: $CACHE}` caches each timeline's
+      // events independently between calls. Same `$CACHE` placeholder
+      // as the extractor MapInfras.
       var yamlSections = [
         "# " + stu.comment,
         "study:",
         "  name: " + stu.name,
         "  path: $STUDIES/" + stu.name,
-        "  infra:",
+        "  infra_timelines:",
         "    folder: $CACHE",
         "segmenter:",
         "  start: " + win.start,
@@ -521,12 +457,15 @@
       pyLines.push("'''");
       pyLines.push("");
       pyLines.push('CACHE = Path.home() / "neuroai_data" / ".cache"');
-      pyLines.push('STUDIES = Path.home() / "neuroai_data" / ".studies"');
+      pyLines.push('STUDIES = Path.home() / "neuroai_data" / "studies"');
       pyLines.push("STUDIES.mkdir(parents=True, exist_ok=True)");
       // `str.replace` requires str args, so str() is unavoidable here
       // (unlike the kwargs-mode infra dict where Pydantic coerces Path).
-      pyLines.push("cfg = yaml.safe_load(");
-      pyLines.push('    config.replace("$CACHE", str(CACHE)).replace("$STUDIES", str(STUDIES))');
+      // The `config` name is reused: the raw YAML string is replaced by
+      // the parsed dict, so downstream code only sees a single `config`.
+      pyLines.push("config = yaml.safe_load(");
+      pyLines.push('    config.replace("$CACHE", str(CACHE))');
+      pyLines.push('          .replace("$STUDIES", str(STUDIES))');
       pyLines.push(")");
       pyLines.push("");
 
@@ -547,7 +486,7 @@
         pyLines.push("        return float(" + mlMetricExpr() + ")");
       }
       pyLines.push("");
-      pyLines.push("exp = Experiment(**cfg)");
+      pyLines.push("exp = Experiment(**config)");
       if (needsML) {
         pyLines.push("");
         pyLines.push("# " + directionLabel());
@@ -565,30 +504,82 @@
       return pyLines.join("\n");
     }
 
-    // ── Top-level renderer ────────────────────────────────────────────────
+    return {
+      buildInstall: buildInstall,
+      buildScriptKwargs: buildScriptKwargs,
+      buildScriptYaml: buildScriptYaml,
+    };
+  }
+
+  // ── Node export (CommonJS-only; browser falls through) ─────────────────────
+  // The fixture generator (docs/_data/render_fixtures.mjs) imports this as a
+  // CJS module and only ever calls `createRenderer`. Skip the DOM bootstrap.
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = { createRenderer: createRenderer, AXIS_ORDER: AXIS_ORDER };
+    return;
+  }
+
+  // ── Browser bootstrap ─────────────────────────────────────────────────────
+  if (typeof window === "undefined" || !window.document) return;
+
+  function init() {
+    var root = document.querySelector(".code-builder");
+    if (!root || !window.CB_DATA) return;
+
+    var DATA = window.CB_DATA;
+    var AXES = DATA.axes;
+
+    // Selection starts at each axis's default — page is fully populated
+    // on load (no progressive reveal needed). Any axis can also be seeded
+    // from a URL query param (e.g. `?neuro=meg&stim=audio&task=decoding`)
+    // so deep-links from the NeuralSet quickstart pills land on a fully
+    // configured Code Builder. Unknown axes / option keys are ignored
+    // silently — robust to stale links if the YAML evolves.
+    var sel = {};
+    AXIS_ORDER.forEach(function (a) { sel[a] = AXES[a].default; });
+    var params = new URLSearchParams(window.location.search);
+    AXIS_ORDER.forEach(function (a) {
+      var v = params.get(a);
+      if (v && AXES[a].options[v]) sel[a] = v;
+    });
+
+    var R = createRenderer(DATA, sel);
+
+    // ── DOM helpers ─────────────────────────────────────────────────────────
+    function el(tag, cls, html) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (html != null) e.innerHTML = html;
+      return e;
+    }
+    var H = window.codeHighlight;
+    var escapeHtml = H.escapeHtml;
+    var highlightPython = H.python;
+    var highlightBash = H.bash;
+
     function render() {
       var bashEl = root.querySelector("#cb-install code");
       if (bashEl) {
-        var bash = buildInstall();
+        var bash = R.buildInstall();
         bashEl.innerHTML = highlightBash(bash);
         addCopy(bashEl, bash);
       }
 
       // The Model axis only matters when a task actually trains something —
-      // hide it when the user picks "Load only" so the bar stays uncluttered.
+      // hide it when the user picks "Load data" so the bar stays uncluttered.
       // We toggle inline `display` rather than the `hidden` attribute because
       // `.code-builder .cb-axis { display: flex }` would otherwise win on
       // specificity and keep it visible.
       var modelWrap = root.querySelector('.cb-axis[data-axis="model"]');
-      if (modelWrap) modelWrap.style.display = task().needs_ml ? "" : "none";
+      if (modelWrap) modelWrap.style.display = AXES.task.options[sel.task].needs_ml ? "" : "none";
 
-      var py = sel.style === "yaml" ? buildScriptYaml() : buildScriptKwargs();
+      var py = sel.style === "yaml" ? R.buildScriptYaml() : R.buildScriptKwargs();
       var pyEl = root.querySelector("#cb-script code");
       pyEl.innerHTML = highlightPython(py);
       addCopy(pyEl, py);
     }
 
-    // ── Copy button ───────────────────────────────────────────────────────
+    // ── Copy button ─────────────────────────────────────────────────────────
     // Match sphinx-copybutton's markup so the site-wide `button.copybtn`
     // styles (and the `.success` override) apply for free, instead of
     // shipping a one-off Font Awesome icon that drifts from the rest of
@@ -624,7 +615,7 @@
       wrap.appendChild(b);
     }
 
-    // ── UI: collapsible axes ──────────────────────────────────────────────
+    // ── UI: collapsible axes ────────────────────────────────────────────────
     // Each axis renders as:
     //   ┌──────────────────────────────────┐
     //   │ Axis · <SelectedLabel>     ▾    │   ← always visible (cb-axis-summary)
