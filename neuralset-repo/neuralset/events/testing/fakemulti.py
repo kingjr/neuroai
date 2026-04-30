@@ -70,27 +70,66 @@ def _make_meg_like(folder, fname, ch_type, n_chans, sfreq, rng):
 
 
 def _make_fnirs(folder, fname, n_chans, sfreq, rng):
-    """Write a tiny .fif with fNIRS continuous-wave amplitude channels."""
-    import mne
+    """Write a minimal SNIRF v1.1 file with continuous-wave amplitude data.
+
+    Hand-rolled with h5py (already a dep for the synthetic spike data) to
+    avoid pulling in `pysnirf2` just for testing. Covers the smallest
+    schema MNE's `read_raw_snirf` accepts: `formatVersion`, a `nirs` group
+    with `metaDataTags`, `probe` (wavelengths + 2D source/detector
+    positions), and one `data1` block with one `measurementList<i>` per
+    channel.
+    """
+    import h5py
 
     fp = folder / fname
     if fp.exists():
         return
-    # fNIRS channel naming follows MNE's `S<src>_D<det> <wavelength>` convention.
-    ch_names = [f"S{i + 1}_D{i + 1} 760" for i in range(n_chans)]
-    info = mne.create_info(
-        ch_names=ch_names,
-        sfreq=sfreq,
-        ch_types="fnirs_cw_amplitude",
-    )
     n_samples = int(sfreq * _DURATION_S)
     # fNIRS raw amplitude is positive (light intensity), not a centred signal.
-    data = rng.rand(n_chans, n_samples).astype("float32") * 0.1 + 0.5
-    mne.io.RawArray(data, info, verbose="ERROR").save(
-        fp,
-        overwrite=True,
-        verbose="ERROR",
-    )
+    data = rng.rand(n_samples, n_chans).astype("float64") * 0.1 + 0.5
+    time = np.arange(n_samples, dtype="float64") / sfreq
+    n_optodes = max(1, n_chans // 2)
+
+    with h5py.File(fp, "w") as f:
+        f.create_dataset("formatVersion", data=np.bytes_("1.1"))
+        nirs = f.create_group("nirs")
+        md = nirs.create_group("metaDataTags")
+        for k, v in (
+            ("SubjectID", "fakemulti"),
+            ("MeasurementDate", "2026-01-01"),
+            ("MeasurementTime", "00:00:00"),
+            ("LengthUnit", "mm"),
+            ("TimeUnit", "s"),
+            ("FrequencyUnit", "Hz"),
+        ):
+            md.create_dataset(k, data=np.bytes_(v))
+        probe = nirs.create_group("probe")
+        probe.create_dataset(
+            "wavelengths",
+            data=np.array([760.0, 850.0], dtype="float64"),
+        )
+        probe.create_dataset(
+            "sourcePos2D",
+            data=np.column_stack([np.arange(n_optodes), np.zeros(n_optodes)]).astype(
+                "float64"
+            ),
+        )
+        probe.create_dataset(
+            "detectorPos2D",
+            data=np.column_stack([np.arange(n_optodes), np.ones(n_optodes)]).astype(
+                "float64"
+            ),
+        )
+        data_grp = nirs.create_group("data1")
+        data_grp.create_dataset("dataTimeSeries", data=data)
+        data_grp.create_dataset("time", data=time)
+        for i in range(n_chans):
+            ml = data_grp.create_group(f"measurementList{i + 1}")
+            ml.create_dataset("sourceIndex", data=np.int32((i % n_optodes) + 1))
+            ml.create_dataset("detectorIndex", data=np.int32((i % n_optodes) + 1))
+            ml.create_dataset("wavelengthIndex", data=np.int32((i // n_optodes) + 1))
+            ml.create_dataset("dataType", data=np.int32(1))  # 1 = CW amplitude
+            ml.create_dataset("dataTypeIndex", data=np.int32(1))
 
 
 def _make_videos(folder, n, rng):
@@ -222,7 +261,7 @@ class FakeMulti(study.Study):
         _make_meg_like(folder, "raw-eeg.fif", "eeg", 32, 256.0, rng)
         _make_meg_like(folder, "raw-ieeg.fif", "seeg", 16, 512.0, rng)
         _make_meg_like(folder, "raw-emg.fif", "emg", 8, 256.0, rng)
-        _make_fnirs(folder, "raw-fnirs.fif", 12, 10.0, rng)
+        _make_fnirs(folder, "raw-fnirs.snirf", 12, 10.0, rng)
         _make_fmri(folder, "bold.nii.gz", rng)
         _make_spikes(folder, "spikes.h5", rng)
         _make_images(folder, _N_STIM, rng)
@@ -239,7 +278,7 @@ class FakeMulti(study.Study):
             ("Eeg", "raw-eeg.fif"),
             ("Ieeg", "raw-ieeg.fif"),
             ("Emg", "raw-emg.fif"),
-            ("Fnirs", "raw-fnirs.fif"),
+            ("Fnirs", "raw-fnirs.snirf"),
         ):
             rows.append(
                 {
