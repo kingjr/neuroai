@@ -8,42 +8,42 @@ window.CB_DATA = {
     "fmri-image": {
       "name": "Allen2022MassiveSample",
       "pip_packages": [
-        "neuralfetch"
+        "neuralfetch[quickstart]"
       ],
       "comment": "Natural Scenes Dataset sample (Allen et al., 2022) \u2014 fMRI \u2194 natural images."
     },
     "fmri-audio": {
       "name": "Li2022PetitSample",
       "pip_packages": [
-        "neuralfetch"
+        "neuralfetch[quickstart]"
       ],
       "comment": "Little Prince fMRI sample (Li et al., 2022) \u2014 fMRI \u2194 spoken story (audio + word + text)."
     },
     "fmri-text": {
       "name": "Li2022PetitSample",
       "pip_packages": [
-        "neuralfetch"
+        "neuralfetch[quickstart]"
       ],
       "comment": "Little Prince fMRI sample (Li et al., 2022) \u2014 fMRI \u2194 word/text events from the audiobook."
     },
     "meg-audio": {
       "name": "Bel2026PetitListenSample",
       "pip_packages": [
-        "neuralfetch"
+        "neuralfetch[quickstart]"
       ],
       "comment": "Petit Prince MEG listening sample (Bel et al., 2026) \u2014 MEG \u2194 spoken story."
     },
     "meg-text": {
       "name": "Bel2026PetitListenSample",
       "pip_packages": [
-        "neuralfetch"
+        "neuralfetch[quickstart]"
       ],
       "comment": "Petit Prince MEG listening sample (Bel et al., 2026) \u2014 MEG \u2194 word/text events from the audiobook."
     },
     "eeg-image": {
       "name": "Grootswagers2022HumanSample",
       "pip_packages": [
-        "neuralfetch"
+        "neuralfetch[quickstart]"
       ],
       "comment": "THINGS-EEG sample (Grootswagers et al., 2022) \u2014 EEG \u2194 natural images."
     }
@@ -143,6 +143,9 @@ window.CB_DATA = {
           "label": "fMRI",
           "cls": "FmriExtractor",
           "event_type": "Fmri",
+          "pip": [
+            "tutorials"
+          ],
           "kwargs": [
             "offset=5"
           ],
@@ -160,6 +163,9 @@ window.CB_DATA = {
           "label": "fNIRS",
           "cls": "FnirsExtractor",
           "event_type": "Fnirs",
+          "pip_packages": [
+            "mne-nirs"
+          ],
           "kwargs": [
             "frequency=10",
             "picks=(\"fnirs\",)",
@@ -182,6 +188,9 @@ window.CB_DATA = {
           "label": "Spike",
           "cls": "SpikesExtractor",
           "event_type": "Spikes",
+          "pip_packages": [
+            "h5py"
+          ],
           "kwargs": [
             "frequency=200",
             "baseline=(-0.1, 0.0)",
@@ -241,6 +250,9 @@ window.CB_DATA = {
           "label": "Audio",
           "cls": "MelSpectrum",
           "event_type": "Audio",
+          "pip": [
+            "all"
+          ],
           "is_classification": false,
           "kwargs": [
             "n_mels=40",

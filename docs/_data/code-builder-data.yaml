@@ -30,29 +30,33 @@ default_study:
   comment: "Built-in synthetic multi-modal study (~2 MB) — covers any combination."
 
 studies:
+  # `neuralfetch[quickstart]` covers every per-study download dependency
+  # (awscli for Allen, openneuro-py + praatio for Li, openneuro-py for Bel,
+  # boto3 + pyunpack + osfclient + openneuro-py for Grootswagers) in one
+  # extras spec, so the bash install line stays a single readable line.
   fmri-image:
     name: Allen2022MassiveSample
-    pip_packages: ["neuralfetch"]
+    pip_packages: ["neuralfetch[quickstart]"]
     comment: "Natural Scenes Dataset sample (Allen et al., 2022) — fMRI ↔ natural images."
   fmri-audio:
     name: Li2022PetitSample
-    pip_packages: ["neuralfetch"]
+    pip_packages: ["neuralfetch[quickstart]"]
     comment: "Little Prince fMRI sample (Li et al., 2022) — fMRI ↔ spoken story (audio + word + text)."
   fmri-text:
     name: Li2022PetitSample
-    pip_packages: ["neuralfetch"]
+    pip_packages: ["neuralfetch[quickstart]"]
     comment: "Little Prince fMRI sample (Li et al., 2022) — fMRI ↔ word/text events from the audiobook."
   meg-audio:
     name: Bel2026PetitListenSample
-    pip_packages: ["neuralfetch"]
+    pip_packages: ["neuralfetch[quickstart]"]
     comment: "Petit Prince MEG listening sample (Bel et al., 2026) — MEG ↔ spoken story."
   meg-text:
     name: Bel2026PetitListenSample
-    pip_packages: ["neuralfetch"]
+    pip_packages: ["neuralfetch[quickstart]"]
     comment: "Petit Prince MEG listening sample (Bel et al., 2026) — MEG ↔ word/text events from the audiobook."
   eeg-image:
     name: Grootswagers2022HumanSample
-    pip_packages: ["neuralfetch"]
+    pip_packages: ["neuralfetch[quickstart]"]
     comment: "THINGS-EEG sample (Grootswagers et al., 2022) — EEG ↔ natural images."
 
 axes:
@@ -134,6 +138,8 @@ axes:
         label: "fMRI"
         cls: FmriExtractor
         event_type: Fmri
+        # `nilearn` ships with `neuralset[tutorials]`.
+        pip: ["tutorials"]
         kwargs:
           - "offset=5"
         yaml_extra:
@@ -146,6 +152,9 @@ axes:
         label: "fNIRS"
         cls: FnirsExtractor
         event_type: Fnirs
+        # `mne-nirs` is the upstream MNE plug-in for fNIRS preprocessing
+        # (optical density, scalp-coupling, TDDR, …) — not in `[tutorials]`.
+        pip_packages: ["mne-nirs"]
         kwargs:
           - "frequency=10"
           - 'picks=("fnirs",)'
@@ -163,6 +172,8 @@ axes:
         label: "Spike"
         cls: SpikesExtractor
         event_type: Spikes
+        # `h5py` is needed to read NWB-style spike files; not a core dep.
+        pip_packages: ["h5py"]
         kwargs:
           - "frequency=200"
           - "baseline=(-0.1, 0.0)"
@@ -211,8 +222,10 @@ axes:
         label: "Audio"
         cls: MelSpectrum
         event_type: Audio
+        # `julius`, `torchaudio`, `soundfile`, `pillow` all ship with
+        # `neuralset[all]` (no separate model download — pure FFT/Mel).
+        pip: ["all"]
         is_classification: false
-        # Lightweight: pure FFT/Mel — no model download.
         kwargs:
           - "n_mels=40"
           - 'aggregation="trigger"'

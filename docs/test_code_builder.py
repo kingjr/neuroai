@@ -92,16 +92,30 @@ def _id(sel: dict) -> str:
 # ── Pure-Python renderer (mirrors docs/_static/code-builder.js) ─────────────
 
 
+def _quote_pip(p: str) -> str:
+    """Quote `extras` brackets so zsh/bash don't expand them as globs."""
+    return f"'{p}'" if "[" in p else p
+
+
 def _build_install(neuro: dict, stim: dict, stu: dict) -> str:
     extras: list[str] = []
     for p in (neuro.get("pip") or []) + (stim.get("pip") or []):
         if p and p not in extras:
             extras.append(p)
     pkg = f"'neuralset[{','.join(extras)}]'" if extras else "neuralset"
-    extra_pkgs = list(stu.get("pip_packages") or [])
+    extra_pkgs: list[str] = []
+    seen: set[str] = set()
+    for p in (
+        list(neuro.get("pip_packages") or [])
+        + list(stim.get("pip_packages") or [])
+        + list(stu.get("pip_packages") or [])
+    ):
+        if p and p not in seen:
+            seen.add(p)
+            extra_pkgs.append(p)
     pip_line = f"pip install {pkg}"
     if extra_pkgs:
-        pip_line += " " + " ".join(extra_pkgs)
+        pip_line += " " + " ".join(_quote_pip(p) for p in extra_pkgs)
     lines = [pip_line]
     for p in (neuro.get("post_install"), stim.get("post_install")):
         if p:

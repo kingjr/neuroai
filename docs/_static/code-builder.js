@@ -56,16 +56,30 @@
     }
 
     // ── Section: bash install ─────────────────────────────────────────────
+    // Quote any package spec carrying `extras` brackets so zsh/bash don't
+    // treat the `[...]` as a glob pattern (e.g. neuralfetch[quickstart]).
+    function quotePip(p) { return p.indexOf("[") >= 0 ? "'" + p + "'" : p; }
     function buildInstall() {
       var pipExtras = {};
       [].concat(neuro().pip || [], stim().pip || []).forEach(function (p) { pipExtras[p] = 1; });
       var pkg = Object.keys(pipExtras).length
         ? "'neuralset[" + Object.keys(pipExtras).join(",") + "]'"
         : "neuralset";
-      // Real-dataset studies live in companion packages (e.g. NeuralFetch).
-      var extraPkgs = (study().pip_packages || []).slice();
+      // Combine extra packages declared on the modalities (e.g. mne-nirs for
+      // FnirsExtractor, h5py for SpikesExtractor) with those declared by the
+      // real-dataset study (NeuralFetch + per-study download deps), de-duped
+      // and quoted for zsh.
+      var extraPkgs = [];
+      var seen = {};
+      [].concat(
+        neuro().pip_packages || [],
+        stim().pip_packages || [],
+        study().pip_packages || []
+      ).forEach(function (p) {
+        if (p && !seen[p]) { seen[p] = 1; extraPkgs.push(p); }
+      });
       var pipLine = "pip install " + pkg;
-      if (extraPkgs.length) pipLine += " " + extraPkgs.join(" ");
+      if (extraPkgs.length) pipLine += " " + extraPkgs.map(quotePip).join(" ");
       var lines = [pipLine];
       [neuro().post_install, stim().post_install].forEach(function (p) {
         if (p) lines.push(p);
