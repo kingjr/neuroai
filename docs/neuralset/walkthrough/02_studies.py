@@ -124,20 +124,21 @@ print(f"With query: {events_q.timeline.nunique()} timelines, {len(events_q)} eve
 # Caching
 # -------
 #
-# Study loading can be cached via the ``infra`` parameter, avoiding
-# repeated I/O and validation on subsequent runs:
+# Study loading can be cached via the ``infra_timelines`` parameter,
+# which caches each timeline independently and avoids repeated I/O and
+# validation on subsequent runs:
 #
 # .. code-block:: python
 #
 #    study = ns.Study(
 #        name="Fake2025Meg",
 #        path=ns.CACHE_FOLDER,
-#        infra={"backend": "Cached", "folder": "/cache"},
+#        infra_timelines={"folder": "/cache"},
 #    )
 #    events = study.run()  # first call: loads and caches
 #    events = study.run()  # subsequent calls: reads from cache
 #
-# Cache modes (set via ``infra.mode``):
+# Cache modes (set via ``infra_timelines.mode``):
 #
 # .. list-table::
 #    :header-rows: 1

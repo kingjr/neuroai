@@ -22,19 +22,14 @@ see :doc:`Installation <install>` for the full breakdown.
 
 ----
 
-Quickstart
-----------
-
-From study to PyTorch batch — pick your modality, stimulus, and task in
-the **Code Builder** to get a runnable script. The first run is slow
-(downloads, install, cache warm-up); subsequent runs are lightning fast
-even as you tweak parameters.
+Examples
+--------
 
 .. raw:: html
 
-   <div class="page-nav">
-     <a href="code_builder.html" class="page-nav-btn">Open the Code Builder &rarr;</a>
-   </div>
+   <div class="qs-builder"
+        data-axes="neuro,stim,task,model,compute"
+        data-defaults="neuro=fmri,stim=image,task=decoding,model=ridge,compute=local"></div>
 
 ----
 
@@ -212,7 +207,7 @@ Citation
    :caption: NeuralSet
 
    Installation <install>
-   Quickstart <code_builder>
+   Examples <code_builder>
    Tutorials <auto_examples/walkthrough/index>
    Caching & Cluster Execution <caching_and_cluster>
 

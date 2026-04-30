@@ -763,6 +763,15 @@ body[data-theme="dark"] .figure img {
     opacity: 1;
 }
 
+/* Reveal-on-hover for copy buttons that live directly on a <pre> element
+   (added by sidebar-nav.js for raw <pre><code> blocks such as the pipeline
+   accordion snippets on the index pages). */
+pre:hover > button.copybtn,
+pre > button.copybtn:focus,
+pre > button.copybtn.success {
+    opacity: 1;
+}
+
 /* ---- Harmonise sphinx-copybutton with our brain+spark feedback ---- */
 /* Override the success state so it shows the same "Copied ⚡🧠" text */
 button.copybtn.success {
@@ -2178,6 +2187,82 @@ body[data-theme="dark"] article .highlight pre {
 }
 
 /* =============================================================================
+   Examples axis bar — NeuralSet landing page (docs/neuralset/index.rst)
+   Reuses the `.cb-axis*` / `.cb-pill` widgets shared with the full Code
+   Builder (see `:is(.code-builder, .qs-builder)` rules below) and arranges
+   them in a single horizontal row, followed by an "Open in Code Builder"
+   button that carries the current selection over as URL query params.
+   ============================================================================= */
+
+.qs-builder {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0.5rem;
+    margin: 1.2rem 0 1.75rem;
+}
+
+.qs-builder-bar {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.4rem;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.qs-builder .cb-axis {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+/* Below ~700px the four-axis row + button no longer fits; allow wrap so
+   the axes flow into a 2x2 grid and the button drops to its own line. */
+@media (max-width: 700px) {
+    .qs-builder,
+    .qs-builder-bar {
+        flex-wrap: wrap;
+    }
+    .qs-builder .cb-axis {
+        flex: 1 1 calc(50% - 0.4rem);
+    }
+    .qs-builder-go {
+        flex: 1 1 100%;
+        justify-content: center;
+    }
+}
+
+/* "Open in Code Builder →" CTA — same shape as `.page-nav-btn` so it
+   reads as the primary action of this section. Slightly tightened
+   padding to align with the axis-summary buttons it sits next to. */
+.qs-builder-go {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 1.15rem;
+    background: linear-gradient(135deg, var(--color-brand-primary), #6BB6FF);
+    color: white !important;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.88rem;
+    text-decoration: none !important;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 2px 8px rgba(68, 138, 255, 0.28);
+    white-space: nowrap;
+    align-self: stretch;
+}
+
+.qs-builder-go:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 18px rgba(68, 138, 255, 0.42);
+    color: white !important;
+}
+
+.qs-builder-go:active {
+    transform: translateY(0);
+}
+
+/* =============================================================================
    Code Builder — 6-axis interactive page (docs/neuralset/code_builder.rst)
    Two-column grid: pills (sticky) on the left, code on the right.
    ============================================================================= */
@@ -2209,7 +2294,7 @@ body[data-theme="dark"] article .highlight pre {
     z-index: 10;
 }
 
-.code-builder .cb-axis.cb-open {
+:is(.code-builder, .qs-builder) .cb-axis.cb-open {
     /* The currently open axis floats above its siblings in the same column
        (so the tray of axis N is never clipped by axis N+1's summary). */
     z-index: 20;
@@ -2223,14 +2308,14 @@ body[data-theme="dark"] article .highlight pre {
     }
 }
 
-.code-builder .cb-axis {
+:is(.code-builder, .qs-builder) .cb-axis {
     position: relative;
     display: flex;
     flex-direction: column;
 }
 
 /* Stacked 2-line summary: tiny axis label on top, selected option below. */
-.code-builder .cb-axis-summary {
+:is(.code-builder, .qs-builder) .cb-axis-summary {
     appearance: none;
     -webkit-appearance: none;
     display: grid;
@@ -2252,16 +2337,16 @@ body[data-theme="dark"] article .highlight pre {
     transition: border-color 0.12s ease, background 0.12s ease;
 }
 
-.code-builder .cb-axis-summary:hover {
+:is(.code-builder, .qs-builder) .cb-axis-summary:hover {
     border-color: var(--color-brand-primary);
 }
 
-.code-builder .cb-axis.cb-open > .cb-axis-summary {
+:is(.code-builder, .qs-builder) .cb-axis.cb-open > .cb-axis-summary {
     border-color: var(--color-brand-primary);
     background: color-mix(in srgb, var(--color-brand-primary) 8%, var(--color-background-secondary));
 }
 
-.code-builder .cb-axis-label {
+:is(.code-builder, .qs-builder) .cb-axis-label {
     grid-column: 1;
     grid-row: 1;
     color: var(--color-foreground-secondary);
@@ -2271,7 +2356,7 @@ body[data-theme="dark"] article .highlight pre {
     font-size: 0.62rem;
 }
 
-.code-builder .cb-axis-summary-value {
+:is(.code-builder, .qs-builder) .cb-axis-summary-value {
     grid-column: 1;
     grid-row: 2;
     min-width: 0;
@@ -2282,7 +2367,7 @@ body[data-theme="dark"] article .highlight pre {
     font-size: 0.85rem;
 }
 
-.code-builder .cb-axis-caret {
+:is(.code-builder, .qs-builder) .cb-axis-caret {
     grid-column: 2;
     grid-row: 1 / span 2;
     color: var(--color-foreground-muted, var(--color-foreground-secondary));
@@ -2290,13 +2375,14 @@ body[data-theme="dark"] article .highlight pre {
     transition: transform 0.15s ease;
 }
 
-.code-builder .cb-axis.cb-open > .cb-axis-summary > .cb-axis-caret {
+:is(.code-builder, .qs-builder) .cb-axis.cb-open > .cb-axis-summary > .cb-axis-caret {
     transform: rotate(180deg);
 }
 
 /* The pill tray is hidden until the axis is open; on desktop it floats
-   over the code column so the layout never shifts. */
-.code-builder .cb-axis-tray {
+   over the surrounding content (code column in `.code-builder`, the row
+   below in `.qs-builder`) so the layout never shifts. */
+:is(.code-builder, .qs-builder) .cb-axis-tray {
     display: none;
     flex-wrap: wrap;
     gap: 0.3rem;
@@ -2310,7 +2396,7 @@ body[data-theme="dark"] article .highlight pre {
 }
 
 @media (min-width: 801px) {
-    .code-builder .cb-axis-tray {
+    :is(.code-builder, .qs-builder) .cb-axis-tray {
         position: absolute;
         top: 100%;
         left: 0;
@@ -2319,12 +2405,12 @@ body[data-theme="dark"] article .highlight pre {
     }
 }
 
-.code-builder .cb-axis.cb-open > .cb-axis-tray {
+:is(.code-builder, .qs-builder) .cb-axis.cb-open > .cb-axis-tray {
     display: flex;
     animation: cb-fadein 0.18s ease both;
 }
 
-.code-builder .cb-pill {
+:is(.code-builder, .qs-builder) .cb-pill {
     padding: 0.28rem 0.7rem;
     border: 1.5px solid var(--color-background-border);
     border-radius: 999px;
@@ -2337,12 +2423,12 @@ body[data-theme="dark"] article .highlight pre {
     transition: all 0.12s ease;
 }
 
-.code-builder .cb-pill:hover {
+:is(.code-builder, .qs-builder) .cb-pill:hover {
     border-color: var(--color-brand-primary);
     background: color-mix(in srgb, var(--color-brand-primary) 10%, var(--color-background-secondary));
 }
 
-.code-builder .cb-pill.active {
+:is(.code-builder, .qs-builder) .cb-pill.active {
     background: var(--color-brand-primary);
     border-color: var(--color-brand-primary);
     color: white;

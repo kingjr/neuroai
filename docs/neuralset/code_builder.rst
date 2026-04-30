@@ -1,4 +1,4 @@
-Code Builder
+Examples
 ============
 
 The first run can be slow — pip pulls extras, the multi-modal demo

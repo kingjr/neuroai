@@ -118,6 +118,7 @@ html_js_files = [
     "code-highlight.js",
     "code-builder-data.js",  # auto-generated from _data/code-builder-data.yaml
     "code-builder.js",
+    "quickstart-axes.js",
     "sidebar-nav.js",
 ]
 
