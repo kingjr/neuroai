@@ -48,10 +48,13 @@ studies:
   meg-audio:
     name: Bel2026PetitListenSample
     pip_packages: ["neuralfetch", "openneuro-py"]
+    # MaxShield-recorded MEG: enable allow_maxshield so MegExtractor accepts it.
+    neuro_kwargs: ["allow_maxshield=True"]
     comment: "Petit Prince MEG listening sample (Bel et al., 2026) — MEG ↔ spoken story."
   meg-text:
     name: Bel2026PetitListenSample
     pip_packages: ["neuralfetch", "openneuro-py"]
+    neuro_kwargs: ["allow_maxshield=True"]
     comment: "Petit Prince MEG listening sample (Bel et al., 2026) — MEG ↔ word/text events from the audiobook."
   eeg-image:
     name: Grootswagers2022HumanSample

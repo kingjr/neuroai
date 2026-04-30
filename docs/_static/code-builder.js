@@ -405,8 +405,13 @@
       lines.push('study = ns.Study(name="' + stu.name + '", path=CACHE)');
       lines.push("");
       lines.push("# 2. Define extractors");
-      lines.push(multilineCall("neuro_ext = ns.extractors." + n.cls, n.kwargs, "infra=infra"));
-      lines.push(multilineCall("stim_ext  = ns.extractors." + s.cls, s.kwargs, sTrailing));
+      // Real-data studies may pin extractor kwargs (e.g. allow_maxshield=True
+      // for Bel's MaxShield-recorded MEG). Append them to the neuro/stim
+      // kwargs so the rendered call carries them.
+      var nKwargs = (n.kwargs || []).concat(stu.neuro_kwargs || []);
+      var sKwargs = (s.kwargs || []).concat(stu.stim_kwargs || []);
+      lines.push(multilineCall("neuro_ext = ns.extractors." + n.cls, nKwargs, "infra=infra"));
+      lines.push(multilineCall("stim_ext  = ns.extractors." + s.cls, sKwargs, sTrailing));
       lines.push("");
       lines.push("# 3. Segment around each \"" + s.event_type + "\" event");
       lines.push("segmenter = ns.Segmenter(");
@@ -455,8 +460,9 @@
         ? "infra:\n" + infraToYamlBlock(c.infra_literal, 2)
         : null;
 
-      var nKw = (n.kwargs || []).concat(n.yaml_extra || []);
-      var sKw = (s.kwargs || []).concat(s.yaml_extra || []);
+      var stu = study();
+      var nKw = (n.kwargs || []).concat(n.yaml_extra || []).concat(stu.neuro_kwargs || []);
+      var sKw = (s.kwargs || []).concat(s.yaml_extra || []).concat(stu.stim_kwargs || []);
 
       var stimBlock = [
         "    stim:",
@@ -468,7 +474,6 @@
         stimBlock.push(infraExtractor);
       }
 
-      var stu = study();
       var yamlSections = [
         "# " + stu.comment,
         "study:",

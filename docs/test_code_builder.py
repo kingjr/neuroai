@@ -374,15 +374,18 @@ def _build_kwargs_script(
     lines.append(f'study = ns.Study(name="{stu["name"]}", path=CACHE)')
     lines.append("")
     lines.append("# 2. Define extractors")
+    # Real-data studies may pin extractor kwargs (e.g. allow_maxshield=True
+    # for Bel's MaxShield-recorded MEG). Append them to the per-modality
+    # kwargs so the rendered call carries them.
+    n_kwargs = list(neuro["kwargs"]) + list(stu.get("neuro_kwargs") or [])
+    s_kwargs = list(stim["kwargs"]) + list(stu.get("stim_kwargs") or [])
     lines.append(
         _multiline_call(
-            f"neuro_ext = ns.extractors.{neuro['cls']}", neuro["kwargs"], "infra=infra"
+            f"neuro_ext = ns.extractors.{neuro['cls']}", n_kwargs, "infra=infra"
         )
     )
     lines.append(
-        _multiline_call(
-            f"stim_ext  = ns.extractors.{stim['cls']}", stim["kwargs"], s_trailing
-        )
+        _multiline_call(f"stim_ext  = ns.extractors.{stim['cls']}", s_kwargs, s_trailing)
     )
     lines.append("")
     lines.append(f'# 3. Segment around each "{stim["event_type"]}" event')
@@ -466,8 +469,16 @@ def _build_yaml_script(
     win = neuro["window"]
     needs_ml = bool(task.get("needs_ml"))
 
-    n_kw = list(neuro.get("kwargs") or []) + list(neuro.get("yaml_extra") or [])
-    s_kw = list(stim.get("kwargs") or []) + list(stim.get("yaml_extra") or [])
+    n_kw = (
+        list(neuro.get("kwargs") or [])
+        + list(neuro.get("yaml_extra") or [])
+        + list(stu.get("neuro_kwargs") or [])
+    )
+    s_kw = (
+        list(stim.get("kwargs") or [])
+        + list(stim.get("yaml_extra") or [])
+        + list(stu.get("stim_kwargs") or [])
+    )
 
     stim_block = [
         "    stim:",

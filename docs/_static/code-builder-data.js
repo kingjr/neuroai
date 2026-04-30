@@ -37,6 +37,9 @@ window.CB_DATA = {
         "neuralfetch",
         "openneuro-py"
       ],
+      "neuro_kwargs": [
+        "allow_maxshield=True"
+      ],
       "comment": "Petit Prince MEG listening sample (Bel et al., 2026) \u2014 MEG \u2194 spoken story."
     },
     "meg-text": {
@@ -44,6 +47,9 @@ window.CB_DATA = {
       "pip_packages": [
         "neuralfetch",
         "openneuro-py"
+      ],
+      "neuro_kwargs": [
+        "allow_maxshield=True"
       ],
       "comment": "Petit Prince MEG listening sample (Bel et al., 2026) \u2014 MEG \u2194 word/text events from the audiobook."
     },
