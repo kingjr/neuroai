@@ -168,18 +168,19 @@ def _infra_to_py(infra_literal: str) -> str:
     """Render the infra literal as a Python dict expression.
 
     Anything that holds the ``"$CACHE"`` placeholder is rewritten to
-    interpolate the runtime ``CACHE`` ``Path``:
-      ``"$CACHE"``       → ``str(CACHE)``
-      ``"$CACHE/foo"``   → ``f"{CACHE}/foo"``
+    interpolate the runtime ``CACHE`` ``Path`` (Pydantic coerces Path -> str
+    so we don't wrap in ``str(...)``):
+      ``"$CACHE"``       → ``CACHE``
+      ``"$CACHE/foo"``   → ``CACHE / "foo"``
     """
     import json
 
     parts: list[str] = []
     for k, v in json.loads(infra_literal).items():
         if isinstance(v, str) and v == "$CACHE":
-            rhs = "str(CACHE)"
+            rhs = "CACHE"
         elif isinstance(v, str) and v.startswith("$CACHE/"):
-            rhs = f'f"{{CACHE}}/{v[len("$CACHE/") :]}"'
+            rhs = f'CACHE / "{v[len("$CACHE/") :]}"'
         elif v is None:
             rhs = "None"
         else:
@@ -364,14 +365,22 @@ def _build_kwargs_script(
     lines.extend(_ml_imports(stim, task, model))
     lines.extend(_load_imports(task))
     lines.append("")
-    lines.append('CACHE = Path.home() / ".cache" / "neuralset"')
+    lines.append('CACHE = Path.home() / "neuroai_data" / ".cache"')
+    lines.append('STUDIES = Path.home() / "neuroai_data" / ".studies"')
+    lines.append("STUDIES.mkdir(parents=True, exist_ok=True)")
     lines.append("infra = " + c_infra)
     lines.append("")
     lines.append(f"# 1. {stu['comment']}")
     # Parent dir only — Study.download() resolves the study-name subfolder
-    # for unfrozen instances. (YAML mode keeps the explicit subfolder
-    # because the Experiment freezes the Study.)
-    lines.append(f'study = ns.Study(name="{stu["name"]}", path=CACHE)')
+    # for unfrozen instances. The Study also gets its own `Cached` backend
+    # so `study.run()` events are persisted between calls. (YAML mode
+    # keeps the explicit subfolder because the Experiment freezes the
+    # Study.)
+    lines.append("study = ns.Study(")
+    lines.append(f'    name="{stu["name"]}",')
+    lines.append("    path=STUDIES,")
+    lines.append('    infra={"backend": "Cached", "folder": CACHE},')
+    lines.append(")")
     lines.append("")
     lines.append("# 2. Define extractors")
     # Real-data studies may pin extractor kwargs (e.g. allow_maxshield=True
@@ -491,11 +500,17 @@ def _build_yaml_script(
             _infra_to_yaml(comp["infra_literal"], 8),
         ]
 
+    # Study gets its own `Cached` backend so `study.run()` events are
+    # persisted between calls. Same `$CACHE` placeholder as the
+    # extractor MapInfras.
     yaml_sections = [
         f"# {stu['comment']}",
         "study:",
         f"  name: {stu['name']}",
-        f"  path: $CACHE/{stu['name']}",
+        f"  path: $STUDIES/{stu['name']}",
+        "  infra:",
+        "    backend: Cached",
+        "    folder: $CACHE",
         "segmenter:",
         f"  start: {win['start']}",
         f"  duration: {win['duration']}",
@@ -532,8 +547,16 @@ def _build_yaml_script(
     py_lines.append(yaml_body)
     py_lines.append("'''")
     py_lines.append("")
-    py_lines.append('CACHE = Path.home() / ".cache" / "neuralset"')
-    py_lines.append('cfg = yaml.safe_load(config.replace("$CACHE", str(CACHE)))')
+    py_lines.append('CACHE = Path.home() / "neuroai_data" / ".cache"')
+    py_lines.append('STUDIES = Path.home() / "neuroai_data" / ".studies"')
+    py_lines.append("STUDIES.mkdir(parents=True, exist_ok=True)")
+    # `str.replace` requires str args, so str() is unavoidable here
+    # (unlike the kwargs-mode infra dict where Pydantic coerces Path).
+    py_lines.append("cfg = yaml.safe_load(")
+    py_lines.append(
+        '    config.replace("$CACHE", str(CACHE)).replace("$STUDIES", str(STUDIES))'
+    )
+    py_lines.append(")")
     py_lines.append("")
     py_lines.append("class Experiment(pydantic.BaseModel):")
     py_lines.append(
@@ -709,8 +732,11 @@ def test_l3_pipeline_runs_end_to_end(sel: dict, tmp_path: Path) -> None:
     script = _render(sel)
     pre = f"from pathlib import Path as _P\n_TMP = _P({str(tmp_path)!r})\n"
     script = script.replace(
-        'CACHE = Path.home() / ".cache" / "neuralset"',
-        "CACHE = _TMP",
+        'CACHE = Path.home() / "neuroai_data" / ".cache"',
+        'CACHE = _TMP / ".cache"',
+    ).replace(
+        'STUDIES = Path.home() / "neuroai_data" / ".studies"',
+        'STUDIES = _TMP / ".studies"',
     )
     script_path = tmp_path / "script.py"
     script_path.write_text(pre + script)

@@ -359,9 +359,12 @@
       var parts = Object.keys(d).map(function (k) {
         var v = d[k];
         var rhs;
-        if (typeof v === "string" && v === "$CACHE") rhs = "str(CACHE)";
+        // `$CACHE` / `$CACHE/sub` placeholders are interpolated to the
+        // runtime `CACHE` Path. Pydantic coerces Path -> str so we don't
+        // wrap in `str(...)`.
+        if (typeof v === "string" && v === "$CACHE") rhs = "CACHE";
         else if (typeof v === "string" && v.indexOf("$CACHE/") === 0)
-          rhs = 'f"{CACHE}/' + v.slice(7) + '"';
+          rhs = 'CACHE / "' + v.slice(7) + '"';
         else if (typeof v === "string") rhs = JSON.stringify(v);
         else if (v === null) rhs = "None";
         else rhs = JSON.stringify(v);
@@ -393,16 +396,23 @@
       mlImps.forEach(function (l) { lines.push(l); });
       loadImports().forEach(function (l) { lines.push(l); });
       lines.push("");
-      lines.push('CACHE = Path.home() / ".cache" / "neuralset"');
+      lines.push('CACHE = Path.home() / "neuroai_data" / ".cache"');
+      lines.push('STUDIES = Path.home() / "neuroai_data" / ".studies"');
+      lines.push("STUDIES.mkdir(parents=True, exist_ok=True)");
       lines.push("infra = " + cInfra);
       lines.push("");
       var stu = study();
       lines.push("# 1. " + stu.comment);
-      // Pass the *parent* cache dir; Study.download() resolves the
-      // study-name subfolder. (The YAML renderer keeps the explicit
-      // subfolder because the Experiment freezes the Study — see
-      // buildScriptYaml.)
-      lines.push('study = ns.Study(name="' + stu.name + '", path=CACHE)');
+      // Pass the *parent* studies dir; Study.download() resolves the
+      // study-name subfolder. The Study also gets its own `Cached`
+      // backend so that `study.run()` events are persisted between calls.
+      // (YAML mode keeps the explicit subfolder because the Experiment
+      // freezes the Study — see buildScriptYaml.)
+      lines.push("study = ns.Study(");
+      lines.push('    name="' + stu.name + '",');
+      lines.push("    path=STUDIES,");
+      lines.push('    infra={"backend": "Cached", "folder": CACHE},');
+      lines.push(")");
       lines.push("");
       lines.push("# 2. Define extractors");
       // Real-data studies may pin extractor kwargs (e.g. allow_maxshield=True
@@ -474,11 +484,17 @@
         stimBlock.push(infraExtractor);
       }
 
+      // Study gets its own `Cached` backend so `study.run()` events are
+      // persisted between calls. Same `$CACHE` placeholder as the
+      // extractor MapInfras.
       var yamlSections = [
         "# " + stu.comment,
         "study:",
         "  name: " + stu.name,
-        "  path: $CACHE/" + stu.name,
+        "  path: $STUDIES/" + stu.name,
+        "  infra:",
+        "    backend: Cached",
+        "    folder: $CACHE",
         "segmenter:",
         "  start: " + win.start,
         "  duration: " + win.duration,
@@ -505,8 +521,14 @@
       pyLines.push(yamlBody);
       pyLines.push("'''");
       pyLines.push("");
-      pyLines.push('CACHE = Path.home() / ".cache" / "neuralset"');
-      pyLines.push('cfg = yaml.safe_load(config.replace("$CACHE", str(CACHE)))');
+      pyLines.push('CACHE = Path.home() / "neuroai_data" / ".cache"');
+      pyLines.push('STUDIES = Path.home() / "neuroai_data" / ".studies"');
+      pyLines.push("STUDIES.mkdir(parents=True, exist_ok=True)");
+      // `str.replace` requires str args, so str() is unavoidable here
+      // (unlike the kwargs-mode infra dict where Pydantic coerces Path).
+      pyLines.push("cfg = yaml.safe_load(");
+      pyLines.push('    config.replace("$CACHE", str(CACHE)).replace("$STUDIES", str(STUDIES))');
+      pyLines.push(")");
       pyLines.push("");
 
       pyLines.push("class Experiment(pydantic.BaseModel):");
