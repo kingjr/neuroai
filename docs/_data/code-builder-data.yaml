@@ -60,6 +60,12 @@ studies:
     name: Grootswagers2022HumanSample
     pip_packages: ["neuralfetch", "pyunpack", "boto3", "osfclient", "openneuro-py"]
     comment: "THINGS-EEG sample (Grootswagers et al., 2022) - EEG <-> natural images."
+  meg-classification:
+    # Built into neuralset (neuralset.events.testing.mne2013sample), so no
+    # `pip_packages` are needed beyond `neuralset` itself. MNE auto-downloads
+    # the ~600 MB sample to `~/mne_data/` on first run.
+    name: Mne2013Sample
+    comment: "MNE-Python sample MEG dataset (Gramfort et al., 2013) - MEG <-> audio/visual side classification."
 
 axes:
 

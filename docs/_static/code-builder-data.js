@@ -69,6 +69,10 @@ window.CB_DATA = {
         "openneuro-py"
       ],
       "comment": "THINGS-EEG sample (Grootswagers et al., 2022) - EEG <-> natural images."
+    },
+    "meg-classification": {
+      "name": "Mne2013Sample",
+      "comment": "MNE-Python sample MEG dataset (Gramfort et al., 2013) - MEG <-> audio/visual side classification."
     }
   },
   "axes": {
