@@ -1,7 +1,7 @@
 /* code-builder.js — Interactive 6-axis code builder.
    Reads `window.CB_DATA` (generated from docs/_data/code-builder-data.yaml)
    and renders bash + python snippets that wire a study (real public dataset
-   when (neuro, stim) maps to one, or `FakeMulti` otherwise) through
+   when (neuro, stim) maps to one, or `ExampleMultiModal` otherwise) through
    NeuralSet's extractors / Segmenter, and (optionally) an sklearn
    `cross_val_score` one-liner. The yaml-style python embeds the config as a
    triple-quoted string; for encode/decode tasks it wraps the pipeline in an
@@ -48,7 +48,7 @@
     }
     // Render the install block as two `pip install` calls so framework +
     // extractor deps are visually separated from dataset deps. The dataset
-    // section is omitted entirely for FakeMulti (no `pip_packages`).
+    // section is omitted entirely for ExampleMultiModal (no `pip_packages`).
     function buildInstall() {
       var extras  = uniq([].concat(neuro().pip || [], stim().pip || []));
       var fwPkgs  = uniq([].concat(neuro().pip_packages || [], stim().pip_packages || []));

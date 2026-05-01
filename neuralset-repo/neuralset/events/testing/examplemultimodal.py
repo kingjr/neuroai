@@ -95,7 +95,7 @@ def _make_fnirs(folder, fname, n_chans, sfreq, rng):
         nirs = f.create_group("nirs")
         md = nirs.create_group("metaDataTags")
         for k, v in (
-            ("SubjectID", "fakemulti"),
+            ("SubjectID", "examplemultimodal"),
             ("MeasurementDate", "2026-01-01"),
             ("MeasurementTime", "00:00:00"),
             ("LengthUnit", "mm"),
@@ -207,7 +207,7 @@ def _make_spikes(folder, fname, rng, n_units=8, rate_hz=5.0):
         )
 
 
-class FakeMulti(study.Study):
+class ExampleMultiModal(study.Study):
     """Multi-modal synthetic study (2 subjects × 2 runs).
 
     Each timeline carries one minute of synthetic recordings for **every**
@@ -245,8 +245,8 @@ class FakeMulti(study.Study):
         # Events embed absolute filepaths under `self.path`. Study's cache
         # UID excludes `path` (it varies per machine), so a cache populated
         # under one path keeps returning stale filepaths after the user
-        # moves the studies folder. FakeMulti is tiny (~2 MB) and cheap to
-        # regenerate; skip the events cache so the demo stays robust.
+        # moves the studies folder. The dataset is tiny (~2 MB) and cheap
+        # to regenerate; skip the events cache so the demo stays robust.
         self.infra_timelines.folder = None
 
     def iter_timelines(self) -> tp.Iterator[dict[str, tp.Any]]:

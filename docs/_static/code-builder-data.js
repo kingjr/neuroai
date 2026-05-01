@@ -1,7 +1,7 @@
 /* AUTO-GENERATED from docs/_data/code-builder-data.yaml. DO NOT EDIT. */
 window.CB_DATA = {
   "default_study": {
-    "name": "FakeMulti",
+    "name": "ExampleMultiModal",
     "comment": "Built-in synthetic multi-modal study (~2 MB) - covers any combination."
   },
   "studies": {

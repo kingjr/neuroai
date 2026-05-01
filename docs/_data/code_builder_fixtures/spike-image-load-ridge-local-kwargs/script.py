@@ -9,7 +9,7 @@ infra = {"folder": CACHE}
 
 # 1. Built-in synthetic multi-modal study (~2 MB) - covers any combination.
 study = ns.Study(
-    name="FakeMulti",
+    name="ExampleMultiModal",
     path=STUDIES,
     infra_timelines={"folder": CACHE},
 )

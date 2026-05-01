@@ -268,8 +268,8 @@ def test_l3_pipeline_runs_end_to_end(sel: dict, tmp_path: Path) -> None:
 
     # Real public datasets (Allen2022Massive, Bel2026Petit, etc.) require
     # large network downloads, are subject to upstream availability, and
-    # often need credentials — keep L3 to FakeMulti combos so it stays
-    # fast and self-contained.
+    # often need credentials — keep L3 to ExampleMultiModal combos so it
+    # stays fast and self-contained.
     stu = STUDIES.get(f"{sel['neuro']}-{sel['stim']}", DEFAULT_STUDY)
     if stu["name"] != DEFAULT_STUDY["name"]:
         pytest.skip(f"{_id(sel)}: uses real public dataset {stu['name']!r}")

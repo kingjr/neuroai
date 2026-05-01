@@ -18,11 +18,11 @@
 #   x_expr: <str>     — raw Python expression producing the X matrix from `batch`
 
 # Per (neuro, stim) pair, the renderer picks a real public dataset when one
-# exists, and falls back to the bundled `FakeMulti` synthetic study otherwise.
-# The keys are `<neuro>-<stim>`. The `*Sample` variants subset the original
-# datasets so first-run downloads stay reasonable.
+# exists, and falls back to the bundled `ExampleMultiModal` synthetic study
+# otherwise. The keys are `<neuro>-<stim>`. The `*Sample` variants subset the
+# original datasets so first-run downloads stay reasonable.
 default_study:
-  name: FakeMulti
+  name: ExampleMultiModal
   comment: "Built-in synthetic multi-modal study (~2 MB) - covers any combination."
 
 studies:
@@ -179,7 +179,7 @@ axes:
         post_install: "python -m spacy download en_core_web_md"
         event_type: Word
         is_classification: false
-        # `language` flows from the Word event itself (FakeMulti sets it).
+        # `language` flows from the Word event itself (ExampleMultiModal sets it).
         kwargs:
           - 'aggregation="trigger"'
 
