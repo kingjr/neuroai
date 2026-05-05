@@ -142,7 +142,7 @@
     // ── Trailing "Open in Code Builder" link ─────────────────────────────
     // The href is rebuilt on every pill click so the link always reflects
     // the current selection. The destination page parses the query string
-    // and pre-selects the matching options.
+    // and preselects the matching options.
     var goBtn = el(
       "a", "qs-builder-go",
       'Show me! <span aria-hidden="true">&rarr;</span>'
