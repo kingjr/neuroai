@@ -1,21 +1,21 @@
-/* render_fixtures.mjs — Regenerate Code Builder golden fixtures.
+/* render_fixtures.mjs — Render Code Builder fixtures into a target dir.
  *
  * Reuses `createRenderer` from docs/_static/code-builder.js (the same
  * factory the browser bootstrap calls) so the JS renderer is the single
  * source of truth. For each axis-pinned combo (one combo per axis option
  * with the other axes at their defaults) we emit:
  *
- *   docs/_data/code_builder_fixtures/<id>/install.sh
- *   docs/_data/code_builder_fixtures/<id>/script.py
+ *   <out>/<id>/install.sh
+ *   <out>/<id>/script.py
  *
- * Run with:  node docs/_data/render_fixtures.mjs
+ * Output dir resolution (first match wins):
+ *   1. argv[2]                        — `node render_fixtures.mjs /tmp/foo`
+ *   2. $CB_FIXTURES_DIR               — env-var override
+ *   3. docs/_data/code_builder_fixtures (legacy default; not committed)
  *
- * `docs/test_code_builder.py` consumes these fixtures directly (L1
- * `ast.parse`, L2 extractor instantiation, L3 subprocess exec). It also
- * checks that the committed fixtures match what this script would produce
- * — but only when the env var `CB_FIXTURES_REGEN_CHECK=1` is set, which
- * is left off in CI so the test suite doesn't depend on Node. Run this
- * script whenever code-builder.js or code-builder-data.yaml changes.
+ * `docs/test_code_builder.py` calls this script once per session into
+ * `tmp_path_factory.mktemp(...)` and consumes the output from there, so
+ * fixtures are never committed and can never drift from the renderer.
  */
 
 import { readFileSync, writeFileSync, mkdirSync, rmSync, readdirSync } from "node:fs";
@@ -25,11 +25,11 @@ import { createRequire } from "node:module";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DOCS = resolve(HERE, "..");
-// Honour an env-var override so the L0 "fixtures-in-sync" test can write
-// to a temp directory without mutating the committed copies.
-const FIXTURES_DIR = process.env.CB_FIXTURES_DIR
-  ? resolve(process.env.CB_FIXTURES_DIR)
-  : resolve(HERE, "code_builder_fixtures");
+const FIXTURES_DIR = process.argv[2]
+  ? resolve(process.argv[2])
+  : process.env.CB_FIXTURES_DIR
+    ? resolve(process.env.CB_FIXTURES_DIR)
+    : resolve(HERE, "code_builder_fixtures");
 
 const require = createRequire(import.meta.url);
 const { createRenderer, AXIS_ORDER } = require(

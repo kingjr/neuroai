@@ -6,37 +6,25 @@
 
 """Tests for the interactive code-builder page (docs/neuralset/code_builder.rst).
 
-Four layers (all driven by frozen fixtures in
-``docs/_data/code_builder_fixtures/<id>/{install.sh,script.py}``):
+Four layers, all driven by fixtures rendered on-demand by the JS
+generator (``docs/_data/render_fixtures.mjs``) into a session-scoped
+tmp dir (see the ``fixtures_dir`` fixture in ``docs/conftest.py``):
 
-  L0  YAML schema + cls resolution + JS-data-in-sync + fixtures-present.
-      Always runs.
-  L1  ``ast.parse`` each fixture's script.py (cheap syntactic check).
-      Always runs.
+  L0  YAML schema + cls resolution + JS-data-in-sync.  Always runs.
+  L1  ``ast.parse`` each rendered ``script.py``.  Always runs.
   L2  Exec only the extractor instantiation lines under real Pydantic
-      validation. Always runs.
-  L3  Subprocess-exec each fixture's script.py end-to-end.
-      ``@pytest.mark.slow`` — opt-in.
+      validation.  Always runs.
+  L3  Subprocess-exec each ``script.py`` end-to-end.
+      ``@pytest.mark.slow`` — opt-in via ``--slow``.
 
-The fixtures are produced by ``docs/_data/render_fixtures.mjs`` from the
-JS renderer (``docs/_static/code-builder.js``). The JS is the single
-source of truth: regenerate the fixtures whenever the JS or YAML
-changes:
-
-    node docs/_data/render_fixtures.mjs
-
-The optional L0 sync test (``test_l0_fixtures_in_sync_with_renderer``)
-re-runs the Node generator and diffs against the committed fixtures.
-It only runs when ``CB_FIXTURES_REGEN_CHECK=1`` is set so CI never
-depends on Node.
+The JS renderer (``docs/_static/code-builder.js``) is the single source
+of truth; the Python tests only consume what it emits, so drift is
+impossible by construction. Node must be on PATH for L1/L2/L3.
 """
 
 from __future__ import annotations
 
 import ast
-import filecmp
-import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -46,8 +34,6 @@ import pytest
 DOCS = Path(__file__).parent
 DATA_YAML = DOCS / "_data" / "code-builder-data.yaml"
 DATA_JS = DOCS / "_static" / "code-builder-data.js"
-FIXTURES_DIR = DOCS / "_data" / "code_builder_fixtures"
-FIXTURES_GEN = DOCS / "_data" / "render_fixtures.mjs"
 
 sys.path.insert(0, str(DOCS / "_data"))
 import build_data  # type: ignore  # noqa: E402
@@ -66,7 +52,8 @@ def _axis_pinned() -> list[dict]:
     """One combo per axis option, with the other axes at their defaults.
 
     Mirrors the JS-side `axisPinned` in `docs/_data/render_fixtures.mjs`,
-    so every committed fixture corresponds to exactly one returned combo.
+    so every fixture rendered there corresponds to exactly one returned
+    combo here.
     """
     base = {a: AXES[a]["default"] for a in AXIS_ORDER}
     seen: set[tuple] = set()
@@ -85,8 +72,8 @@ def _id(sel: dict) -> str:
     return "-".join(sel[a] for a in AXIS_ORDER)
 
 
-def _fixture_script(sel: dict) -> str:
-    return (FIXTURES_DIR / _id(sel) / "script.py").read_text()
+def _fixture_script(fixtures_dir: Path, sel: dict) -> str:
+    return (fixtures_dir / _id(sel) / "script.py").read_text()
 
 
 def _extract_extractor_calls(script: str) -> str:
@@ -160,59 +147,13 @@ def test_l0_generated_js_is_in_sync() -> None:
     )
 
 
-def test_l0_fixtures_present_for_all_combos() -> None:
-    """Every axis-pinned combo must have a committed fixture directory
-    holding both `install.sh` and `script.py`."""
-    for sel in _axis_pinned():
-        d = FIXTURES_DIR / _id(sel)
-        assert d.is_dir(), (
-            f"Missing fixture for {_id(sel)} at {d}. "
-            "Regenerate with: node docs/_data/render_fixtures.mjs"
-        )
-        for name in ("install.sh", "script.py"):
-            assert (d / name).is_file(), f"{d / name} missing"
-
-
-@pytest.mark.skipif(
-    os.environ.get("CB_FIXTURES_REGEN_CHECK") != "1",
-    reason="set CB_FIXTURES_REGEN_CHECK=1 to validate fixtures via Node",
-)
-def test_l0_fixtures_in_sync_with_renderer(tmp_path: Path) -> None:
-    """Re-run the Node fixture generator into a tmp dir and diff against
-    the committed fixtures. Opt-in via env var so CI stays Node-free."""
-    if shutil.which("node") is None:
-        pytest.skip("node not on PATH")
-
-    proc = subprocess.run(
-        ["node", str(FIXTURES_GEN)],
-        capture_output=True,
-        text=True,
-        env={**os.environ, "CB_FIXTURES_DIR": str(tmp_path)},
-    )
-    assert proc.returncode == 0, (
-        f"render_fixtures.mjs failed:\n{proc.stderr}\n{proc.stdout}"
-    )
-
-    diff = filecmp.dircmp(FIXTURES_DIR, tmp_path)
-    drift = (
-        diff.left_only
-        + diff.right_only
-        + diff.diff_files
-        + [s for s in diff.subdirs if diff.subdirs[s].diff_files]
-    )
-    assert not drift, (
-        f"Committed fixtures drifted from renderer output: {drift}. "
-        "Regenerate with: node docs/_data/render_fixtures.mjs"
-    )
-
-
 # ── L1: AST sweep over per-axis-pinned combos ──────────────────────────────
 
 
 @pytest.mark.parametrize("sel", _axis_pinned(), ids=_id)
-def test_l1_rendered_python_parses(sel: dict) -> None:
-    """Every committed fixture must be syntactically valid Python."""
-    script = _fixture_script(sel)
+def test_l1_rendered_python_parses(sel: dict, fixtures_dir: Path) -> None:
+    """Every rendered fixture must be syntactically valid Python."""
+    script = _fixture_script(fixtures_dir, sel)
     try:
         ast.parse(script)
     except SyntaxError as e:
@@ -223,7 +164,7 @@ def test_l1_rendered_python_parses(sel: dict) -> None:
 
 
 @pytest.mark.parametrize("sel", _axis_pinned(), ids=_id)
-def test_l2_extractors_instantiate(sel: dict, tmp_path: Path) -> None:
+def test_l2_extractors_instantiate(sel: dict, fixtures_dir: Path, tmp_path: Path) -> None:
     """Exec only the two `neuro = ns.extractors.<Cls>(...)` and
     `stim = ns.extractors.<Cls>(...)` assignments under real Pydantic
     validation. Ensures kwargs in the YAML are accepted by the live
@@ -239,7 +180,7 @@ def test_l2_extractors_instantiate(sel: dict, tmp_path: Path) -> None:
     import neuralset as ns
     import neuralset.extractors  # force submodule load so `ns.extractors` resolves  # noqa: F401
 
-    src = _extract_extractor_calls(_fixture_script(sel))
+    src = _extract_extractor_calls(_fixture_script(fixtures_dir, sel))
     assert src, f"no extractor assignments found in fixture for {_id(sel)}"
 
     g: dict = {"ns": ns, "infra": {"folder": str(tmp_path), "cluster": None}}
@@ -256,7 +197,9 @@ def test_l2_extractors_instantiate(sel: dict, tmp_path: Path) -> None:
 
 @pytest.mark.slow
 @pytest.mark.parametrize("sel", _axis_pinned(), ids=_id)
-def test_l3_pipeline_runs_end_to_end(sel: dict, tmp_path: Path) -> None:
+def test_l3_pipeline_runs_end_to_end(
+    sel: dict, fixtures_dir: Path, tmp_path: Path
+) -> None:
     """Subprocess-exec each fixture, redirecting CACHE/STUDIES into tmp_path."""
     if sel["compute"] == "slurm":
         pytest.skip("slurm path is generated-only; not exec'd here")
@@ -274,7 +217,7 @@ def test_l3_pipeline_runs_end_to_end(sel: dict, tmp_path: Path) -> None:
     if stu["name"] != DEFAULT_STUDY["name"]:
         pytest.skip(f"{_id(sel)}: uses real public dataset {stu['name']!r}")
 
-    script = _fixture_script(sel)
+    script = _fixture_script(fixtures_dir, sel)
     pre = f"from pathlib import Path as _P\n_TMP = _P({str(tmp_path)!r})\n"
     script = script.replace(
         'CACHE = Path.home() / "neuroai_data" / ".cache"',
