@@ -8,7 +8,7 @@ config = '''
 study:
   name: Allen2022MassiveSample
   path: $STUDIES/Allen2022MassiveSample
-  infra_timelines:
+  infra:
     folder: $CACHE
 segmenter:
   start: 0

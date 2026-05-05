@@ -17,7 +17,7 @@ infra = {
 study = ns.Study(
     name="Allen2022MassiveSample",
     path=STUDIES,
-    infra_timelines={"folder": CACHE},
+    infra={"folder": CACHE},
 )
 
 # 2. Define extractors

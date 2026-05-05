@@ -340,14 +340,15 @@
       var stu = study();
       lines.push("# 1. " + stu.comment);
       // Pass the *parent* studies dir; Study.download() resolves the
-      // study-name subfolder. `infra_timelines={"folder": CACHE}` caches
-      // each timeline's events independently between calls. (YAML mode
-      // keeps the explicit subfolder because the Experiment freezes the
-      // Study — see buildScriptYaml.)
+      // study-name subfolder. `infra={"folder": CACHE}` caches the merged
+      // events DataFrame and propagates the folder to infra_timelines so
+      // each timeline's events are also cached. (YAML mode keeps the
+      // explicit subfolder because the Experiment freezes the Study —
+      // see buildScriptYaml.)
       lines.push("study = ns.Study(");
       lines.push('    name="' + stu.name + '",');
       lines.push("    path=STUDIES,");
-      lines.push('    infra_timelines={"folder": CACHE},');
+      lines.push('    infra={"folder": CACHE},');
       lines.push(")");
       lines.push("");
       lines.push("# 2. Define extractors");
@@ -420,15 +421,16 @@
         stimBlock.push(infraExtractor);
       }
 
-      // `infra_timelines: {folder: $CACHE}` caches each timeline's
-      // events independently between calls. Same `$CACHE` placeholder
-      // as the extractor MapInfras.
+      // `infra: {folder: $CACHE}` caches the merged events DataFrame
+      // and propagates the folder to infra_timelines so each timeline
+      // is also cached. Same `$CACHE` placeholder as the extractor
+      // MapInfras.
       var yamlSections = [
         "# " + stu.comment,
         "study:",
         "  name: " + stu.name,
         "  path: $STUDIES/" + stu.name,
-        "  infra_timelines:",
+        "  infra:",
         "    folder: $CACHE",
         "segmenter:",
         "  start: " + win.start,

@@ -11,7 +11,7 @@ infra = {"folder": CACHE}
 study = ns.Study(
     name="Grootswagers2022HumanSample",
     path=STUDIES,
-    infra_timelines={"folder": CACHE},
+    infra={"folder": CACHE},
 )
 
 # 2. Define extractors
