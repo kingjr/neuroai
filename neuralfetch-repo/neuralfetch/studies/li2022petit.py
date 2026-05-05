@@ -118,7 +118,7 @@ class Li2022Petit(study.Study):
             path = path / self.__class__.__name__
         client = download.Openneuro(study=dataset_id, dset_dir=path)
         client.download()
-        # TODO when available, automatize download of transcripts files
+        # TODO when available, automate download of transcripts files
 
     def iter_timelines(self) -> tp.Iterator[dict[str, tp.Any]]:
         if not self.path.exists():
@@ -252,6 +252,7 @@ class Li2022Petit(study.Study):
             for old, new in [("’", "'"), (" pusse ", " puisse ")]:
                 text = text.replace(old, new)
         language = {"en": "english", "fr": "french", "cn": "chinese"}[lang_lower]
+        events["language"] = language
         # end of text fixes
         events2.append({"type": "Text", "text": text, "language": language})
         # update text start/duration from sound start/duration
