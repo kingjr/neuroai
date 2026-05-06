@@ -115,6 +115,12 @@ html_css_files = [
 
 html_js_files = [
     "pipeline-accordion.js",
+    # Prism.js for client-side syntax highlighting in the Code Builder.
+    # Vendored under _static/vendor/prism/ (MIT, v1.29.0). Loaded before
+    # code-highlight.js so window.Prism is defined when the shim runs.
+    "vendor/prism/prism.min.js",
+    "vendor/prism/prism-python.min.js",
+    "vendor/prism/prism-bash.min.js",
     "code-highlight.js",
     "code-builder-data.js",  # auto-generated from _data/code-builder-data.yaml
     "code-builder.js",

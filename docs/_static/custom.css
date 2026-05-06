@@ -818,33 +818,100 @@ button.copybtn.success::after {
     color: inherit;
 }
 
-/* Syntax highlighting styles (light mode) */
-.highlight-comment { color: #008000; font-style: italic; }
-.highlight-string { color: #800080; }
-.highlight-keyword { color: #2C2CFF; font-weight: bold; }
-.highlight-builtin { color: #2C2CFF; }
-.highlight-number { color: #2C8553; font-weight: bold; }
-.highlight-function { font-weight: bold; font-style: italic; }
-.highlight-operator { color: #666666; }
+/* Syntax highlighting styles (light mode).
+   `.highlight-*` is emitted by pipeline-accordion.js (custom tokeniser).
+   `.token.*` is emitted by Prism.js (used by code-builder.js via the
+   code-highlight.js shim). Both selector families share the palette
+   below so dynamic snippets match Pygments-rendered code. */
+.highlight-comment,
+.token.comment, .token.prolog, .token.cdata,
+.token.shebang { color: #008000; font-style: italic; }
+.highlight-string,
+.token.string, .token.attr-value, .token.regex,
+.token.triple-quoted-string,
+.token.string-interpolation > .token.string { color: #800080; }
+.highlight-keyword,
+.token.keyword, .token.boolean, .token.constant,
+.token.important, .token.atrule { color: #2C2CFF; font-weight: bold; }
+.highlight-builtin,
+.token.builtin, .token.symbol,
+.token.variable, .token.environment { color: #2C2CFF; }
+.highlight-number,
+.token.number { color: #2C8553; font-weight: bold; }
+.highlight-function,
+.token.function, .token.class-name,
+.token.decorator, .token.annotation { font-weight: bold; font-style: italic; }
+.highlight-operator,
+.token.operator, .token.punctuation { color: #666666; }
 
 /* Dark mode syntax highlighting */
 @media (prefers-color-scheme: dark) {
-    body:not([data-theme="light"]) .highlight-comment { color: #959077; }
-    body:not([data-theme="light"]) .highlight-string { color: #E6DB74; }
-    body:not([data-theme="light"]) .highlight-keyword { color: #66D9EF; }
-    body:not([data-theme="light"]) .highlight-builtin { color: #A6E22E; }
-    body:not([data-theme="light"]) .highlight-number { color: #AE81FF; }
-    body:not([data-theme="light"]) .highlight-function { color: #A6E22E; font-weight: bold; }
-    body:not([data-theme="light"]) .highlight-operator { color: #FF4689; }
+    body:not([data-theme="light"]) .highlight-comment,
+    body:not([data-theme="light"]) .token.comment,
+    body:not([data-theme="light"]) .token.prolog,
+    body:not([data-theme="light"]) .token.cdata,
+    body:not([data-theme="light"]) .token.shebang { color: #959077; }
+    body:not([data-theme="light"]) .highlight-string,
+    body:not([data-theme="light"]) .token.string,
+    body:not([data-theme="light"]) .token.attr-value,
+    body:not([data-theme="light"]) .token.regex,
+    body:not([data-theme="light"]) .token.triple-quoted-string,
+    body:not([data-theme="light"]) .token.string-interpolation > .token.string { color: #E6DB74; }
+    body:not([data-theme="light"]) .highlight-keyword,
+    body:not([data-theme="light"]) .token.keyword,
+    body:not([data-theme="light"]) .token.boolean,
+    body:not([data-theme="light"]) .token.constant,
+    body:not([data-theme="light"]) .token.important,
+    body:not([data-theme="light"]) .token.atrule { color: #66D9EF; }
+    body:not([data-theme="light"]) .highlight-builtin,
+    body:not([data-theme="light"]) .token.builtin,
+    body:not([data-theme="light"]) .token.symbol,
+    body:not([data-theme="light"]) .token.variable,
+    body:not([data-theme="light"]) .token.environment { color: #A6E22E; }
+    body:not([data-theme="light"]) .highlight-number,
+    body:not([data-theme="light"]) .token.number { color: #AE81FF; }
+    body:not([data-theme="light"]) .highlight-function,
+    body:not([data-theme="light"]) .token.function,
+    body:not([data-theme="light"]) .token.class-name,
+    body:not([data-theme="light"]) .token.decorator,
+    body:not([data-theme="light"]) .token.annotation { color: #A6E22E; font-weight: bold; }
+    body:not([data-theme="light"]) .highlight-operator,
+    body:not([data-theme="light"]) .token.operator,
+    body:not([data-theme="light"]) .token.punctuation { color: #FF4689; }
 }
 
-body[data-theme="dark"] .highlight-comment { color: #959077; }
-body[data-theme="dark"] .highlight-string { color: #E6DB74; }
-body[data-theme="dark"] .highlight-keyword { color: #66D9EF; }
-body[data-theme="dark"] .highlight-builtin { color: #A6E22E; }
-body[data-theme="dark"] .highlight-number { color: #AE81FF; }
-body[data-theme="dark"] .highlight-function { color: #A6E22E; font-weight: bold; }
-body[data-theme="dark"] .highlight-operator { color: #FF4689; }
+body[data-theme="dark"] .highlight-comment,
+body[data-theme="dark"] .token.comment,
+body[data-theme="dark"] .token.prolog,
+body[data-theme="dark"] .token.cdata,
+body[data-theme="dark"] .token.shebang { color: #959077; }
+body[data-theme="dark"] .highlight-string,
+body[data-theme="dark"] .token.string,
+body[data-theme="dark"] .token.attr-value,
+body[data-theme="dark"] .token.regex,
+body[data-theme="dark"] .token.triple-quoted-string,
+body[data-theme="dark"] .token.string-interpolation > .token.string { color: #E6DB74; }
+body[data-theme="dark"] .highlight-keyword,
+body[data-theme="dark"] .token.keyword,
+body[data-theme="dark"] .token.boolean,
+body[data-theme="dark"] .token.constant,
+body[data-theme="dark"] .token.important,
+body[data-theme="dark"] .token.atrule { color: #66D9EF; }
+body[data-theme="dark"] .highlight-builtin,
+body[data-theme="dark"] .token.builtin,
+body[data-theme="dark"] .token.symbol,
+body[data-theme="dark"] .token.variable,
+body[data-theme="dark"] .token.environment { color: #A6E22E; }
+body[data-theme="dark"] .highlight-number,
+body[data-theme="dark"] .token.number { color: #AE81FF; }
+body[data-theme="dark"] .highlight-function,
+body[data-theme="dark"] .token.function,
+body[data-theme="dark"] .token.class-name,
+body[data-theme="dark"] .token.decorator,
+body[data-theme="dark"] .token.annotation { color: #A6E22E; font-weight: bold; }
+body[data-theme="dark"] .highlight-operator,
+body[data-theme="dark"] .token.operator,
+body[data-theme="dark"] .token.punctuation { color: #FF4689; }
 
 .code-separator {
     text-align: center;
