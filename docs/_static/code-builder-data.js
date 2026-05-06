@@ -306,7 +306,7 @@ window.CB_DATA = {
       "default": "ridge",
       "options": {
         "ridge": {
-          "label": "sklearn",
+          "label": "Scikit-Learn",
           "kind": "ridge"
         },
         "torch": {

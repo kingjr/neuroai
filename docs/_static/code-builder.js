@@ -321,7 +321,11 @@
     function buildScriptKwargs() {
       var n = neuro(), s = stim(), c = comp(), t = task();
       var win = n.window;
-      var sTrailing = s.accepts_infra === false ? null : "infra=infra";
+      // Slurm scripts get an `infra_slurm = {...}` variable so the cluster
+      // config is self-documenting at a glance; local scripts use the
+      // shorter `infra = {...}`. Both are consumed identically downstream.
+      var infraVar = sel.compute === "slurm" ? "infra_slurm" : "infra";
+      var sTrailing = s.accepts_infra === false ? null : "infra=" + infraVar;
       var cInfra = infraToPyDict(c.infra_literal);
 
       var lines = [
@@ -335,7 +339,7 @@
       lines.push('CACHE = Path.home() / "neuroai_data" / ".cache"');
       lines.push('STUDIES = Path.home() / "neuroai_data" / "studies"');
       lines.push("STUDIES.mkdir(parents=True, exist_ok=True)");
-      lines.push("infra = " + cInfra);
+      lines.push(infraVar + " = " + cInfra);
       lines.push("");
       var stu = study();
       lines.push("# 1. " + stu.comment);
@@ -357,7 +361,7 @@
       // kwargs so the rendered call carries them.
       var nKwargs = (n.kwargs || []).concat(stu.neuro_kwargs || []);
       var sKwargs = (s.kwargs || []).concat(stu.stim_kwargs || []);
-      lines.push(multilineCall("neuro = ns.extractors." + n.cls, nKwargs, "infra=infra"));
+      lines.push(multilineCall("neuro = ns.extractors." + n.cls, nKwargs, "infra=" + infraVar));
       lines.push(multilineCall("stim  = ns.extractors." + s.cls, sKwargs, sTrailing));
       lines.push("");
       lines.push("# 3. Segment around each \"" + s.event_type + "\" event");

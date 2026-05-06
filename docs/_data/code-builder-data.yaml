@@ -256,7 +256,7 @@ axes:
     label: "Training"
     default: ridge
     options:
-      ridge: {label: "sklearn", kind: ridge}
+      ridge: {label: "Scikit-Learn", kind: ridge}
       torch: {label: "PyTorch", kind: torch}
 
   style:
