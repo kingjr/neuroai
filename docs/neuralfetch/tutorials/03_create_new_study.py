@@ -65,9 +65,6 @@ import tempfile
 from pathlib import Path
 
 tmp = Path(tempfile.mkdtemp())
-# Inline classes can't be pickled by spawned workers, so we disable
-# parallel timeline loading here. Module-level Study subclasses don't
-# need this — the default (processpool) works.
 study = MyDemoStudy2026(path=tmp, infra_timelines={"cluster": None})
 events = study.run()
 
