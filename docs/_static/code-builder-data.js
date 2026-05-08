@@ -312,6 +312,20 @@ window.CB_DATA = {
         "torch": {
           "label": "PyTorch",
           "kind": "torch"
+        },
+        "neuraltrain": {
+          "label": "NeuralTrain",
+          "kind": "neuraltrain",
+          "pip_packages": [
+            "neuraltrain"
+          ]
+        },
+        "neuraltrain_lightning": {
+          "label": "NeuralTrain (Lightning)",
+          "kind": "neuraltrain_lightning",
+          "pip_packages": [
+            "neuraltrain[lightning]"
+          ]
         }
       }
     },

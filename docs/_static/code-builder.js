@@ -51,7 +51,11 @@
     // section is omitted entirely for ExampleMultiModal (no `pip_packages`).
     function buildInstall() {
       var extras  = uniq([].concat(neuro().pip || [], stim().pip || []));
-      var fwPkgs  = uniq([].concat(neuro().pip_packages || [], stim().pip_packages || []));
+      // Training-axis extras (e.g. neuraltrain[lightning]) are only relevant
+      // when the script actually trains something; the axis is hidden in
+      // the UI for `task=load`, so we mirror that here.
+      var modelPkgs = task().needs_ml ? (model().pip_packages || []) : [];
+      var fwPkgs  = uniq([].concat(neuro().pip_packages || [], stim().pip_packages || [], modelPkgs));
       var nsToken = extras.length ? "'neuralset[" + extras.join(",") + "]'" : "neuralset";
       var fwLine  = "pip install " + [nsToken].concat(fwPkgs.map(quotePip)).join(" ");
 
@@ -197,6 +201,21 @@
           "from torch.utils.data import DataLoader",
         ];
       }
+      if (m.kind === "neuraltrain") {
+        return [
+          "from torch.utils.data import DataLoader",
+          "from neuraltrain import BaseLoss, BaseOptimizer",
+          "from neuraltrain.models import Linear",
+        ];
+      }
+      if (m.kind === "neuraltrain_lightning") {
+        return [
+          "import lightning.pytorch as pl",
+          "from torch.utils.data import DataLoader",
+          "from neuraltrain import BaseLoss, LightningOptimizer",
+          "from neuraltrain.models import Linear",
+        ];
+      }
       // ridge: classic full-RAM `dset.load_all()` + `cross_val_score`.
       var e = _mlExprs();
       return [
@@ -210,9 +229,10 @@
       var t = task();
       if (!t.needs_ml) return "score";
       var m = model();
-      // The torch branch reports a per-batch training loss; only the
-      // Ridge / cross_val_score branch yields a "score" metric.
-      if (m.kind === "torch") return "final loss";
+      // Torch + neuraltrain branches report a running training loss; only
+      // the Ridge / cross_val_score branch yields a proper held-out score.
+      if (m.kind === "torch" || m.kind === "neuraltrain"
+          || m.kind === "neuraltrain_lightning") return "final loss";
       var s = stim();
       var isClass = !!s.is_classification;
       var isDec = (t.direction === "decoding");
@@ -220,11 +240,16 @@
     }
 
     // The Python expression printed in the f-string / returned by
-    // Experiment.score(). The torch branch exposes `loss` from inside the
-    // training loop (a 0-d tensor — works in both `f"{...:.3f}"` and
-    // `float(...)`); the Ridge branch yields a CV `scores` ndarray.
+    // Experiment.score(). The torch / neuraltrain branches expose `loss`
+    // (a 0-d torch tensor — works in both `f"{...:.3f}"` and `float(...)`);
+    // Lightning reads it back from `trainer.callback_metrics`; Ridge
+    // yields a CV `scores` ndarray.
     function mlMetricExpr() {
-      return model().kind === "ridge" ? "scores.mean()" : "loss";
+      switch (model().kind) {
+        case "ridge":                 return "scores.mean()";
+        case "neuraltrain_lightning": return 'lm.trainer.callback_metrics["train_loss"]';
+        default:                      return "loss";  // torch, neuraltrain
+      }
     }
 
     function mlComputeLines(indent) {
@@ -266,6 +291,68 @@
         lines.push(pad + "    loss = " + lossFn + "(model(X), y)");
         lines.push(pad + "    loss.backward()");
         lines.push(pad + "    opt.step()");
+        return lines;
+      }
+
+      // neuraltrain branches share the loss-name / out-dim switch with torch.
+      if (m.kind === "neuraltrain" || m.kind === "neuraltrain_lightning") {
+        var ntLoss, ntOutDim;
+        if (e.isDec && e.isClass) {
+          ntLoss = "CrossEntropyLoss";
+          ntOutDim = 'batch.data["stim"].shape[-1]';
+        } else {
+          ntLoss = "MSELoss";
+          ntOutDim = y + ".shape[-1]";
+        }
+        var lines = [];
+        lines.push(pad + "loader = DataLoader(dset, batch_size=32, collate_fn=dset.collate_fn, shuffle=True)");
+        e.tLines.forEach(function (l) { lines.push(pad + l); });
+        lines.push(pad + "batch = next(iter(loader))");
+
+        if (m.kind === "neuraltrain") {
+          // Same manual loop as torch, but built from neuraltrain typed
+          // configs — Linear / BaseLoss / BaseOptimizer.
+          lines.push(pad + "X = " + X);
+          lines.push(pad + "model = Linear().build(");
+          lines.push(pad + "    n_in_channels=X.shape[-1],");
+          lines.push(pad + "    n_outputs=" + ntOutDim + ",");
+          lines.push(pad + ")");
+          lines.push(pad + 'loss_fn   = BaseLoss(name="' + ntLoss + '").build()');
+          lines.push(pad + 'optimizer = BaseOptimizer(name="Adam", kwargs={"lr": 1e-3}).build(model.parameters())');
+          lines.push(pad + "for batch in loader:");
+          lines.push(pad + "    X = " + X);
+          lines.push(pad + "    y = " + y);
+          lines.push(pad + "    optimizer.zero_grad()");
+          lines.push(pad + "    loss = loss_fn(model(X), y)");
+          lines.push(pad + "    loss.backward()");
+          lines.push(pad + "    optimizer.step()");
+          return lines;
+        }
+
+        // neuraltrain_lightning: same configs + an inline LightningModule
+        // wrapped in pl.Trainer.fit(...). `lm.trainer.callback_metrics` carries
+        // the last logged value of "train_loss" — see mlMetricExpr().
+        lines.push(pad + "n_in  = " + X + ".shape[-1]");
+        lines.push(pad + "n_out = " + ntOutDim);
+        lines.push(pad + "model_cfg = Linear()");
+        lines.push(pad + 'loss_cfg  = BaseLoss(name="' + ntLoss + '")');
+        lines.push(pad + 'optim_cfg = LightningOptimizer(optimizer={"name": "Adam", "lr": 1e-3})');
+        lines.push("");
+        lines.push(pad + "class LM(pl.LightningModule):");
+        lines.push(pad + "    def __init__(self):");
+        lines.push(pad + "        super().__init__()");
+        lines.push(pad + "        self.model = model_cfg.build(n_in_channels=n_in, n_outputs=n_out)");
+        lines.push(pad + "        self.loss  = loss_cfg.build()");
+        lines.push(pad + "    def training_step(self, batch, _):");
+        lines.push(pad + "        y = " + y);
+        lines.push(pad + "        loss = self.loss(self.model(" + X + "), y)");
+        lines.push(pad + '        self.log("train_loss", loss)');
+        lines.push(pad + "        return loss");
+        lines.push(pad + "    def configure_optimizers(self):");
+        lines.push(pad + "        return optim_cfg.build(self.parameters())");
+        lines.push("");
+        lines.push(pad + "lm = LM()");
+        lines.push(pad + "pl.Trainer(max_epochs=5, enable_progress_bar=False).fit(lm, loader)");
         return lines;
       }
 
