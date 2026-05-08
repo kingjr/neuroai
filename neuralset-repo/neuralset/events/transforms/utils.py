@@ -65,6 +65,9 @@ def _extract_sentences(events) -> list[ev.Sentence]:
                 text = w0.sentence
                 if not (isinstance(text, str) and text):
                     text = MISSING_SENTENCE
+                language = getattr(w0, "language", "")
+                if not isinstance(language, str):
+                    language = ""
                 sentences.append(
                     ev.Sentence(
                         start=w0.start - eps,
@@ -74,6 +77,7 @@ def _extract_sentences(events) -> list[ev.Sentence]:
                         + 2 * eps,
                         timeline=w0.timeline,
                         text=text,
+                        language=language,
                     )
                 )
                 words = []
@@ -232,18 +236,18 @@ class TextWordMatcher:
                 i["sentence"] = tok.sent.text_with_ws
                 i["sentence_char"] = tok.idx - tok.sent[0].idx
 
-        prev_sent: str | None = None
+        prev_sent_start: int | None = None  # sentence positional id
         pending: list[dict[str, tp.Any]] = []
         for i in info:
-            sent = i.get("sentence")
-            if sent is None:
+            if i.get("text_char") is None:
                 pending.append(i)
                 continue
-            if prev_sent == sent:
+            sent_start = i["text_char"] - i["sentence_char"]
+            if prev_sent_start == sent_start:
                 for p in pending:
-                    p["sentence"] = sent
+                    p["sentence"] = i["sentence"]
             pending = []
-            prev_sent = sent
+            prev_sent_start = sent_start
 
 
 def _merge_sentences(

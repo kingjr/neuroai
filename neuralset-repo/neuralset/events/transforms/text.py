@@ -182,7 +182,7 @@ class AddSentenceToWords(EventsTransform):
         events.loc[:, "sentence_char"] = np.nan
         events["sentence"] = ""
 
-        sentences = []
+        sentences: list[dict[str, tp.Any]] = []
         for context in contexts.itertuples():
             # find words that are enclosed in this context (requires unique timeline)
             encl = _segs.find_enclosed(
@@ -206,13 +206,9 @@ class AddSentenceToWords(EventsTransform):
                 index=sel,
             )
             events.loc[sel, info.columns] = info
-            # create sentence events
-            context_sentences = [s.to_dict() for s in _extract_sentences(events)]
-            subject = getattr(context, "subject", None)
-            if subject is not None:
-                for s in context_sentences:
-                    s["subject"] = subject
-            sentences.extend(context_sentences)
+            # create sentence events; standardize_events backfills BIDS/study
+            # from sibling rows in the same timeline.
+            sentences.extend(s.to_dict() for s in _extract_sentences(events))
         sentences = [s for s in sentences if s["text"] != MISSING_SENTENCE]
         sentence_df = pd.DataFrame(sentences)
         events = pd.concat([events, sentence_df], ignore_index=True)
@@ -230,6 +226,15 @@ class AddSentenceToWords(EventsTransform):
             msg += f"while {cls}.{max_unmatched_ratio=}"
             raise RuntimeError(msg)
         return events
+
+
+def _sentence_start(word: tp.Any) -> int | None:
+    """Start char of the word's sentence in the parent Text, None if unmatched."""
+    try:
+        _ = word.sentence[:0]  # fails on NaN/None/missing
+        return int(word.text_char) - int(word.sentence_char)
+    except (TypeError, ValueError, AttributeError):
+        return None
 
 
 class AddContextToWords(EventsTransform):
@@ -278,19 +283,18 @@ class AddContextToWords(EventsTransform):
                 splits = [getattr(w, sfield, "") for w in (word, last_word)]
                 if splits[0] != splits[1] or not same_timeline:
                     last_word = None  # restart
-            # word is not correctly match, let's not add a context
-            has_sent = isinstance(word.sentence, str) and word.sentence
-            if word.sentence_char is None or np.isnan(word.sentence_char) or not has_sent:
+            sent_start = _sentence_start(word)
+            if sent_start is None:
                 contexts.append("")
                 continue
+            sent_char = int(word.text_char) - sent_start  # type: ignore[attr-defined]
             # first word, restart parts
             if last_word is None:
                 past_parts: deque[str] = deque(maxlen=self.max_context_len)
                 start_char = 0  # assumes not splitting within sentences
             # not first word from now on
             if last_word is not None:
-                non_increasing_char = word.sentence_char <= last_word.sentence_char
-                if word.sentence != last_word.sentence or non_increasing_char:
+                if sent_start != _sentence_start(last_word):
                     # new sentence
                     if self.sentence_only:
                         past_parts.clear()
@@ -299,11 +303,10 @@ class AddContextToWords(EventsTransform):
                     start_char = 0
                 elif past_parts:  # same sentence
                     # append up to current character to the last context part
-                    last_char = int(word.sentence_char)
-                    past_parts[-1] += word.sentence[start_char:last_char]
-                    start_char = last_char
+                    past_parts[-1] += word.sentence[start_char:sent_char]
+                    start_char = sent_char
             # reset context with timeline + check ordering for safety
-            last_char = int(word.sentence_char) + len(word.text)
+            last_char = sent_char + len(word.text)
             new = word.sentence[start_char:last_char]
             contexts.append("".join(past_parts) + new)
             past_parts.append(new)

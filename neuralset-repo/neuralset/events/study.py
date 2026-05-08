@@ -29,7 +29,11 @@ logger = logging.getLogger(__name__)
 
 
 def _check_folder_path(path: base.PathLike, name: str) -> Path:
-    """Check that the parent path exists and create directory"""
+    """Create `path` if missing; require its parent to already exist.
+
+    Raises RuntimeError if the parent is missing, so a misconfigured study
+    root fails fast instead of creating directories at the wrong location.
+    """
     path = Path(path)
     if not path.parent.exists():
         raise RuntimeError(f"Parent folder {path.parent} of {name} must exist first.")
@@ -219,7 +223,11 @@ class EventsTransform(base.Step):
             @functools.wraps(original)
             def _validated_run(self: tp.Any, *args: tp.Any, **kw: tp.Any) -> pd.DataFrame:
                 result = original(self, *args, **kw)
-                return utils.standardize_events(result, auto_fill=False)
+                try:
+                    return utils.standardize_events(result, auto_fill=False)
+                except ValueError as exc:
+                    exc.add_note(f"in {type(self).__name__}._run output")
+                    raise
 
             cls._run = _validated_run  # type: ignore[assignment]
 

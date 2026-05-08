@@ -288,8 +288,10 @@ def test_event_type_list() -> None:
         "CategoricalEvent",
         "Background",
         "SleepStage",
+        "SleepArousal",
         "Artifact",
         "Seizure",
+        "EpileptiformActivity",
         "Stimulus",
     ]
     # only check event classes owned by neuroai packages
@@ -332,7 +334,35 @@ def test_validate_events_bids_nan_recovery() -> None:
     recovered = ns.events.standardize_events(pd.DataFrame([event]))
     for entity in events.utils.BIDS_ENTITIES:
         assert recovered[entity].iloc[0] == events.utils.BIDS_ENTITY_DEFAULT
-        assert recovered[entity].dtype == object
+        assert pd.api.types.is_string_dtype(recovered[entity].dtype)
+
+
+def test_per_timeline_invariant_propagation() -> None:
+    ev = dict(type="Motor", start=0.0, duration=1.0)
+    bids = dict(subject="s1", session="ses1", task="t1", run="r1", study="StudyA")
+    rows = [
+        {**ev, "timeline": "tl1", **bids},
+        {**ev, "timeline": "tl1", "start": 0.5},
+        {**ev, "timeline": "tl2", "subject": "s2"},
+    ]
+    df = ns.events.standardize_events(pd.DataFrame(rows), auto_fill=False)
+    for col, val in bids.items():
+        assert df.iloc[1][col] == val, col
+    assert df[df.timeline == "tl2"].iloc[0]["subject"] == "s2"
+    # all-empty: no error, stays empty
+    out = ns.events.standardize_events(
+        pd.DataFrame([{**ev, "start": t, "timeline": "tl1"} for t in (0.0, 1.0)]),
+        auto_fill=False,
+    )
+    assert (out["subject"] == "").all()
+    # conflict raises, names the column
+    with pytest.raises(ValueError, match="'subject'"):
+        ns.events.standardize_events(
+            pd.DataFrame(
+                rows + [{**ev, "start": 2.0, "timeline": "tl1", "subject": "other"}]
+            ),
+            auto_fill=False,
+        )
 
 
 def test_normalize_rejects_nan_duration() -> None:

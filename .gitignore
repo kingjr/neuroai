@@ -110,6 +110,7 @@ celerybeat-schedule
 .venv
 venv/
 ENV/
+uv.lock
 
 # Spyder project settings
 .spyderproject
@@ -135,3 +136,6 @@ lightning_logs/
 *.nii.gz
 .vscode
 .cursor
+
+# Local tooling installs (e.g. `pip install --target .tools/ codespell`)
+.tools/
