@@ -250,24 +250,14 @@ axes:
   # Only meaningful for encoding/decoding. The Training axis is hidden in
   # the UI when Task is "Load data". `kind` selects the rendering branch in
   # code-builder.js / test_code_builder.py.
-  #   - ridge:                 classic full-RAM `dset.load_all()` + `cross_val_score`
-  #   - torch:                 mini-batch training over a `DataLoader` with manual Adam
-  #   - neuraltrain:           same manual loop, but built from neuraltrain typed
-  #                            configs (BaseLoss, BaseOptimizer, models.Linear)
-  #   - neuraltrain_lightning: typed configs + a one-step LightningModule
-  #                            wrapped in `pl.Trainer().fit(...)`
-  # `pip_packages` on a model option is folded into the install line by
-  # buildInstall when task().needs_ml is true.
+  #   - ridge: classic full-RAM `dset.load_all()` + `cross_val_score`
+  #   - torch: mini-batch training over a `DataLoader` with manual Adam
   model:
     label: "Training"
     default: ridge
     options:
-      ridge:                 {label: "Scikit-Learn",          kind: ridge}
-      torch:                 {label: "PyTorch",               kind: torch}
-      neuraltrain:           {label: "NeuralTrain",           kind: neuraltrain,
-                              pip_packages: ["neuraltrain"]}
-      neuraltrain_lightning: {label: "NeuralTrain (Lightning)", kind: neuraltrain_lightning,
-                              pip_packages: ["neuraltrain[lightning]"]}
+      ridge: {label: "Scikit-Learn", kind: ridge}
+      torch: {label: "PyTorch", kind: torch}
 
   style:
     label: "Config"
