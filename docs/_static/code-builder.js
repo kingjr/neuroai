@@ -344,15 +344,21 @@
       var stu = study();
       lines.push("# 1. " + stu.comment);
       // Pass the *parent* studies dir; Study.download() resolves the
-      // study-name subfolder. `infra={"folder": CACHE}` caches the merged
-      // events DataFrame and propagates the folder to infra_timelines so
-      // each timeline's events are also cached. (YAML mode keeps the
+      // study-name subfolder. The Study's infra caches the merged events
+      // DataFrame and propagates the folder to infra_timelines so each
+      // timeline's events are also cached. In local mode we reuse the
+      // single `infra` variable (same `{"folder": CACHE}`); in slurm mode
+      // we pin the Study to local caching to avoid spawning a Slurm job
+      // just to merge the events DataFrame. (YAML mode keeps the
       // explicit subfolder because the Experiment freezes the Study —
       // see buildScriptYaml.)
+      var studyInfraExpr = sel.compute === "slurm"
+        ? '{"folder": CACHE}'
+        : infraVar;
       lines.push("study = ns.Study(");
       lines.push('    name="' + stu.name + '",');
       lines.push("    path=STUDIES,");
-      lines.push('    infra={"folder": CACHE},');
+      lines.push("    infra=" + studyInfraExpr + ",");
       lines.push(")");
       lines.push("");
       lines.push("# 2. Define extractors");
