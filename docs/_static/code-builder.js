@@ -50,7 +50,7 @@
     // extractor deps are visually separated from dataset deps. The dataset
     // section is omitted entirely for ExampleMultiModal (no `pip_packages`).
     function buildInstall() {
-      var extras  = uniq([].concat(neuro().pip || [], stim().pip || []));
+      var extras  = uniq([].concat(neuro().pip || [], stim().pip || [], study().pip || []));
       var fwPkgs  = uniq([].concat(neuro().pip_packages || [], stim().pip_packages || []));
       var nsToken = extras.length ? "'neuralset[" + extras.join(",") + "]'" : "neuralset";
       var fwLine  = "pip install " + [nsToken].concat(fwPkgs.map(quotePip)).join(" ");

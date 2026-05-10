@@ -24,6 +24,9 @@
 default_study:
   name: ExampleMultiModal
   comment: "Built-in synthetic multi-modal study (~2 MB) - covers any combination."
+  # ExampleMultiModal._materialize() needs h5py (fNIRS + spikes) and
+  # imageio[ffmpeg] (videos). Both ship in `neuralset[tutorials]`.
+  pip: ["tutorials"]
 
 studies:
   # Per-study download dependencies are listed explicitly so the rendered bash
@@ -157,8 +160,9 @@ axes:
         label: "Spike"
         cls: SpikesExtractor
         event_type: Spikes
-        # `h5py` is needed to read NWB-style spike files; not a core dep.
-        pip_packages: ["h5py"]
+        # `h5py` (used to read NWB-style spike files) ships in
+        # `neuralset[tutorials]`, which the ExampleMultiModal study already
+        # pulls in — so no extra `pip_packages` are needed here.
         kwargs:
           - "frequency=200"
           - "baseline=(-0.1, 0.0)"

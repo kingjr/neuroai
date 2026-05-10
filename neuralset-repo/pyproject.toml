@@ -37,6 +37,8 @@ neuralset = "neuralset.events.testing"
         "spacy",
         "matplotlib",
         "nilearn",
+        "h5py",
+        "imageio[ffmpeg]",
     ]
     all = [
         "neuralset[tutorials]",

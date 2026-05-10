@@ -2,7 +2,10 @@
 window.CB_DATA = {
   "default_study": {
     "name": "ExampleMultiModal",
-    "comment": "Built-in synthetic multi-modal study (~2 MB) - covers any combination."
+    "comment": "Built-in synthetic multi-modal study (~2 MB) - covers any combination.",
+    "pip": [
+      "tutorials"
+    ]
   },
   "studies": {
     "fmri-image": {
@@ -185,9 +188,6 @@ window.CB_DATA = {
           "label": "Spike",
           "cls": "SpikesExtractor",
           "event_type": "Spikes",
-          "pip_packages": [
-            "h5py"
-          ],
           "kwargs": [
             "frequency=200",
             "baseline=(-0.1, 0.0)",

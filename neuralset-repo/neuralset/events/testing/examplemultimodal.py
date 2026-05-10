@@ -72,12 +72,14 @@ def _make_meg_like(folder, fname, ch_type, n_chans, sfreq, rng):
 def _make_fnirs(folder, fname, n_chans, sfreq, rng):
     """Write a minimal SNIRF v1.1 file with continuous-wave amplitude data.
 
-    Hand-rolled with h5py (already a dep for the synthetic spike data) to
-    avoid pulling in `pysnirf2` just for testing. Covers the smallest
-    schema MNE's `read_raw_snirf` accepts: `formatVersion`, a `nirs` group
-    with `metaDataTags`, `probe` (wavelengths + 2D source/detector
-    positions), and one `data1` block with one `measurementList<i>` per
-    channel.
+    Hand-rolled with h5py (also used by `_make_spikes` for the synthetic
+    NWB file) to avoid pulling in `pysnirf2` just for testing. h5py +
+    imageio[ffmpeg] are declared in `neuralset[tutorials]` so the docs
+    Code Builder install line picks them up automatically. Covers the
+    smallest schema MNE's `read_raw_snirf` accepts: `formatVersion`, a
+    `nirs` group with `metaDataTags`, `probe` (wavelengths + 2D
+    source/detector positions), and one `data1` block with one
+    `measurementList<i>` per channel.
     """
     import h5py
 
